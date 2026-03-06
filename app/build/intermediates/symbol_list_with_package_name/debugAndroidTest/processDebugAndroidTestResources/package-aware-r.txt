@@ -1,3 +1,0 @@
-arman.papoyan.zentreesecond.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme

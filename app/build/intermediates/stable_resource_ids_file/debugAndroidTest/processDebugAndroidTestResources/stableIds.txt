@@ -1,2 +1,0 @@
-arman.papoyan.zentreesecond.test:style/WhiteBackgroundTheme = 0x7f010001
-arman.papoyan.zentreesecond.test:style/WhiteBackgroundDialogTheme = 0x7f010000
