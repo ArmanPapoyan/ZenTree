@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent_orange">#FFB74D</color>
+    <color name="background_light">#FAFAFA</color>
+    <color name="primary_green">#388E3C</color>
+    <color name="primary_green_dark">#2E7D32</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="white">#FFFFFF</color>
+    <string name="app_name">ZenTreeSecond</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <style name="Base.Theme.ZenTreeSecond" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        
+    </style>
+    <style name="Theme.ZenTreeSecond" parent="Base.Theme.ZenTreeSecond"/>
+</resources>

@@ -1,0 +1,7 @@
+arman.papoyan.zentreesecond.test.app-androidTest-0 C:\JavaProjects\ZenTreeSecond\app\build\generated\res\resValues\androidTest\debug
+arman.papoyan.zentreesecond.test.app-updated_navigation_xml-1 C:\JavaProjects\ZenTreeSecond\app\build\generated\updated_navigation_xml\debugAndroidTest
+arman.papoyan.zentreesecond.test.app-mergeDebugAndroidTestResources-2 C:\JavaProjects\ZenTreeSecond\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+arman.papoyan.zentreesecond.test.app-mergeDebugAndroidTestResources-3 C:\JavaProjects\ZenTreeSecond\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+arman.papoyan.zentreesecond.test.app-debugAndroidTest-4 C:\JavaProjects\ZenTreeSecond\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources
+arman.papoyan.zentreesecond.test.app-core-1.7.0-5 C:\Users\arman\.gradle\caches\8.13\transforms\4504b3aef9d622a144e2a90c609d0fcd\transformed\core-1.7.0\res
+arman.papoyan.zentreesecond.test.app-tracing-1.2.0-6 C:\Users\arman\.gradle\caches\8.13\transforms\7cd6f980459151f5e862c60ddd5605fe\transformed\tracing-1.2.0\res

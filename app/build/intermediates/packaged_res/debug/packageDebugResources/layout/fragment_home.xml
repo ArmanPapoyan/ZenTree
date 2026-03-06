@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FAFAFA"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Твоё Дерево"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#2E7D32"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"/>
+
+    <FrameLayout
+        android:id="@+id/tree_container"
+        android:layout_width="350dp"
+        android:layout_height="350dp"
+        android:layout_below="@id/title_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:padding="20dp">
+
+        <ImageView
+            android:id="@+id/tree_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            android:layout_gravity="center"/>
+
+        <ImageView
+            android:id="@+id/tree_growth_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            android:alpha="0.0"
+            android:visibility="gone"/>
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tree_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Уровень 1 • Стадия 1"
+        android:textSize="18sp"
+        android:textColor="#212121"
+        android:layout_below="@id/tree_container"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"/>
+
+    <ProgressBar
+        android:id="@+id/tree_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="300dp"
+        android:layout_height="20dp"
+        android:progressTint="#388E3C"
+        android:progressBackgroundTint="#E0E0E0"
+        android:layout_below="@id/tree_level_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/growth_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💤 Фокус-режим выключен"
+        android:textSize="14sp"
+        android:textColor="#9E9E9E"
+        android:layout_below="@id/tree_progress_bar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/motivation_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Начни свой путь к осознанности"
+        android:textSize="16sp"
+        android:textColor="#616161"
+        android:gravity="center"
+        android:maxLines="2"
+        android:layout_above="@id/btn_start_focus"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_start_focus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Начать фокус-сессию"
+        android:backgroundTint="#388E3C"
+        android:textColor="#FFFFFF"
+        android:padding="16dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"/>
+
+</RelativeLayout>
