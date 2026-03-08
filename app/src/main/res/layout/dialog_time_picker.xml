@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:maxHeight="500dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Тип времени:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <RadioGroup
+            android:id="@+id/radio_group_time_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/radio_before"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="До указанного времени"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/radio_at"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="В указанное время"/>
+
+            <RadioButton
+                android:id="@+id/radio_after"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="После указанного времени"/>
+
+            <RadioButton
+                android:id="@+id/radio_range"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Промежуток времени"/>
+
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/text_view_start_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Начало:"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TimePicker
+            android:id="@+id/time_picker_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:timePickerMode="spinner"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/text_view_end_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Конец:"
+            android:textSize="14sp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp"/>
+
+        <TimePicker
+            android:id="@+id/time_picker_end"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:timePickerMode="spinner"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <EditText
+            android:id="@+id/edit_text_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Название задачи"
+            android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/edit_text_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Описание (необязательно)"
+            android:inputType="text"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Приоритет (1 - самый важный):"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/radio_group_priority"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/radio_priority_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1"
+                android:textAlignment="center"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/radio_priority_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="2"
+                android:textAlignment="center"/>
+
+            <RadioButton
+                android:id="@+id/radio_priority_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="3"
+                android:textAlignment="center"/>
+
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/button_select_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выбрать время"
+            android:backgroundTint="#388E3C"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/text_view_selected_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Время не выбрано"
+            android:textSize="14sp"
+            android:textColor="#9E9E9E"
+            android:layout_marginBottom="16dp"/>
+
+    </LinearLayout>
+</ScrollView>
