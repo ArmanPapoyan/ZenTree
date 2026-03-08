@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FAFAFA"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Твоё Дерево"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#2E7D32"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/tree_land_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.7"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toBottomOf="@id/title_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp">
+
+        <View
+            android:id="@+id/tree_background_circle"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/tree_background"
+            app:layout_constraintWidth_percent="1"
+            app:layout_constraintHeight_percent="1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <FrameLayout
+            android:id="@+id/tree_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_percent="0.8"
+            app:layout_constraintHeight_percent="0.8"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/tree_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true"
+                android:layout_gravity="center"/>
+
+            <ImageView
+                android:id="@+id/tree_growth_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true"
+                android:alpha="0.0"
+                android:visibility="gone"/>
+
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tree_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Уровень 1 • Стадия 1"
+        android:textSize="18sp"
+        android:textColor="#212121"
+        app:layout_constraintTop_toBottomOf="@id/tree_land_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <ProgressBar
+        android:id="@+id/tree_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="300dp"
+        android:layout_height="20dp"
+        android:progressTint="#388E3C"
+        android:progressBackgroundTint="#E0E0E0"
+        app:layout_constraintTop_toBottomOf="@id/tree_level_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/growth_status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💤 Фокус-режим выключен"
+        android:textSize="14sp"
+        android:textColor="#9E9E9E"
+        app:layout_constraintTop_toBottomOf="@id/tree_progress_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:id="@+id/motivation_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Начни свой путь к осознанности"
+        android:textSize="16sp"
+        android:textColor="#616161"
+        android:gravity="center"
+        android:maxLines="2"
+        app:layout_constraintBottom_toTopOf="@id/btn_start_focus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_start_focus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Начать фокус-сессию"
+        android:backgroundTint="#388E3C"
+        android:textColor="#FFFFFF"
+        android:padding="16dp"
+        app:cornerRadius="50dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="32dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
