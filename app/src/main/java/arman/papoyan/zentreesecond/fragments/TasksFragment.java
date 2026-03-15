@@ -149,7 +149,6 @@ public class TasksFragment extends Fragment {
         builder.setTitle("Выберите время")
                 .setPositiveButton("Готово", (dialog, which) -> {
                     int selectedId = radioGroupTimeType.getCheckedRadioButtonId();
-
                     selectedTargetHour = timePickerStart.getHour();
                     selectedTargetMinute = timePickerStart.getMinute();
 

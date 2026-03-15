@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969347691069",
+    "project_id": "zentree-2",
+    "storage_bucket": "zentree-2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969347691069:android:2fe27c92bd4348acf3b054",
+        "android_client_info": {
+          "package_name": "arman.papoyan.zentreesecond"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnPEGP1pidu4L1XVAEqHCFcXCiEZeBN60"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
