@@ -1,15 +1,19 @@
 package arman.papoyan.zentreesecond;
 
 import android.os.Bundle;
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import arman.papoyan.zentreesecond.fragments.HomeFragment;
 import arman.papoyan.zentreesecond.fragments.FocusFragment;
+import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.ProfileFragment;
+import arman.papoyan.zentreesecond.utils.FirstLaunchManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,12 +26,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNav = findViewById(R.id.bottom_navigation);
+        FirstLaunchManager firstLaunchManager = new FirstLaunchManager(this);
 
         if (savedInstanceState == null) {
-            currentFragment = new HomeFragment();
+            if (firstLaunchManager.isFirstLaunch()) {
+                bottomNav.setVisibility(View.GONE);
+                currentFragment = new RegistrationFragment();
+            } else {
+                bottomNav.setVisibility(View.VISIBLE);
+                currentFragment = new HomeFragment();
+                setupNavigation();
+            }
             loadFragment(currentFragment, false);
         }
-
+    }
+    private void setupNavigation() {
         bottomNav.setOnItemSelectedListener(item -> {
             Fragment fragment = null;
             int id = item.getItemId();
@@ -75,5 +88,13 @@ public class MainActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+    public void goToHomeFragment() {
+        bottomNav.setVisibility(View.VISIBLE);
+
+        currentFragment = new HomeFragment();
+        loadFragment(currentFragment, false);
+
+        setupNavigation();
     }
 }

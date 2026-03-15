@@ -13,8 +13,6 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
-        TextView textView = view.findViewById(R.id.text_profile);
-        textView.setText("Экран профиля");
         return view;
     }
 }
