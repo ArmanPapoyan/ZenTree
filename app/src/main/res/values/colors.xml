@@ -5,7 +5,7 @@
     <color name="accent_orange">#FFB74D</color>
     <color name="background_light">#FAFAFA</color>
     <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>        <!-- ← ДОБАВЬ ЭТУ СТРОЧКУ -->
+    <color name="black">#000000</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#9E9E9E</color>
 </resources>
