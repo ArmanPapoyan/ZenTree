@@ -1,4 +1,4 @@
-package arman.papoyan.zentreesecond.model;
+package arman.papoyan.zentreesecond.models;
 
 public class Task {
     private String id;

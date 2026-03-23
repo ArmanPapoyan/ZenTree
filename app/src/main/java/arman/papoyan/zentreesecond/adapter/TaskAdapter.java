@@ -15,7 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import arman.papoyan.zentreesecond.R;
-import arman.papoyan.zentreesecond.model.Task;
+import arman.papoyan.zentreesecond.models.Task;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 

@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -27,7 +26,7 @@ import java.util.List;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
-import arman.papoyan.zentreesecond.model.Task;
+import arman.papoyan.zentreesecond.models.Task;
 
 public class TasksFragment extends Fragment {
 
