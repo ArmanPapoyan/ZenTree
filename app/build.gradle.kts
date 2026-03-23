@@ -36,7 +36,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-analytics")
-
+    implementation("com.google.firebase:firebase-firestore:25.1.1")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

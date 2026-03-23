@@ -19,6 +19,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,6 +39,9 @@ public class TasksFragment extends Fragment {
     private List<Task> taskList;
     private FloatingActionButton fabAddTask;
 
+    private FirebaseFirestore db;
+    private String userId;
+
     private int selectedTimeType = 1;
     private int selectedTargetHour = 12;
     private int selectedTargetMinute = 0;
@@ -49,26 +56,55 @@ public class TasksFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_view_tasks);
         fabAddTask = view.findViewById(R.id.fab_add_task);
 
-        taskList = new ArrayList<>();
+        db = FirebaseFirestore.getInstance();
 
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            userId = currentUser.getUid();
+            loadTasksFromFirestore();
+        } else {
+            Toast.makeText(getActivity(), "Войдите в аккаунт", Toast.LENGTH_SHORT).show();
+            return view;
+        }
+
+        taskList = new ArrayList<>();
         adapter = new TaskAdapter();
-        adapter.setTasks(taskList);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.setAdapter(adapter);
+
+        loadTasksFromFirestore();
 
         adapter.setOnTaskClickListener(task -> {
-            Toast.makeText(getActivity(), "Задача: " + task.getTitle(), Toast.LENGTH_SHORT).show();
+
         });
 
         adapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
-            Toast.makeText(getActivity(), "Задача " + (isChecked ? "выполнена" : "не выполнена"), Toast.LENGTH_SHORT).show();
-            adapter.setTasks(taskList);
+            db.collection("tasks").document(userId)
+                    .collection("userTasks").document(task.getId())
+                    .update("isCompleted", isChecked);
         });
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setAdapter(adapter);
 
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
 
         return view;
+    }
+
+    private void loadTasksFromFirestore() {
+        db.collection("tasks").document(userId).collection("userTasks")
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        Toast.makeText(getActivity(), "Ошибка загрузки: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    taskList.clear();
+                    for (QueryDocumentSnapshot doc : value) {
+                        Task task = doc.toObject(Task.class);
+                        task.setId(doc.getId());
+                        taskList.add(task);
+                    }
+                    adapter.setTasks(taskList);
+                });
     }
 
     private void showAddTaskDialog() {
@@ -106,9 +142,20 @@ public class TasksFragment extends Fragment {
                     Task newTask = new Task(title, description, priority,
                             selectedTimeType, selectedTargetHour, selectedTargetMinute,
                             selectedEndHour, selectedEndMinute);
-                    taskList.add(newTask);
-                    adapter.setTasks(taskList);
-                    Toast.makeText(getActivity(), "Задача добавлена", Toast.LENGTH_SHORT).show();
+
+                    String taskId = db.collection("tasks").document(userId)
+                            .collection("userTasks").document().getId();
+                    newTask.setId(taskId);
+
+                    db.collection("tasks").document(userId)
+                            .collection("userTasks").document(taskId)
+                            .set(newTask)
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getActivity(), "Задача добавлена", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
                 })
                 .setNegativeButton("Отмена", null);
 
@@ -148,6 +195,7 @@ public class TasksFragment extends Fragment {
         builder.setTitle("Выберите время")
                 .setPositiveButton("Готово", (dialog, which) -> {
                     int selectedId = radioGroupTimeType.getCheckedRadioButtonId();
+
                     selectedTargetHour = timePickerStart.getHour();
                     selectedTargetMinute = timePickerStart.getMinute();
 
@@ -173,9 +221,6 @@ public class TasksFragment extends Fragment {
         if (radioGroupTimeType.getCheckedRadioButtonId() == R.id.radio_range) {
             textViewEndLabel.setVisibility(View.VISIBLE);
             timePickerEnd.setVisibility(View.VISIBLE);
-        } else {
-            textViewEndLabel.setVisibility(View.GONE);
-            timePickerEnd.setVisibility(View.GONE);
         }
     }
 

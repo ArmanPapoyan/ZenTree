@@ -7,7 +7,6 @@ public class Task {
     private boolean isCompleted;
     private long createdAt;
     private int priority;
-
     private int timeType;
     private int targetHour;
     private int targetMinute;
@@ -15,9 +14,7 @@ public class Task {
     private int endMinute;
 
     public Task() {
-        this.id = String.valueOf(System.currentTimeMillis());
-        this.createdAt = System.currentTimeMillis();
-        this.isCompleted = false;
+
     }
 
     public Task(String title, String description, int priority,

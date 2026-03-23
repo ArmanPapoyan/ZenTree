@@ -7,9 +7,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import arman.papoyan.zentreesecond.fragments.HomeFragment;
 import arman.papoyan.zentreesecond.fragments.FocusFragment;
-import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
+import arman.papoyan.zentreesecond.fragments.LoginFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.ProfileFragment;
@@ -17,7 +20,7 @@ import arman.papoyan.zentreesecond.utils.FirstLaunchManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BottomNavigationView bottomNav;
+    public BottomNavigationView bottomNav;
     private Fragment currentFragment;
 
     @Override
@@ -27,11 +30,21 @@ public class MainActivity extends AppCompatActivity {
 
         bottomNav = findViewById(R.id.bottom_navigation);
         FirstLaunchManager firstLaunchManager = new FirstLaunchManager(this);
-
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.isEmailVerified()) {
+            bottomNav.setVisibility(View.VISIBLE);
+            currentFragment = new HomeFragment();
+            loadFragment(currentFragment, false);
+            setupNavigation();
+        } else {
+            bottomNav.setVisibility(View.GONE);
+            currentFragment = new LoginFragment();
+            loadFragment(currentFragment, false);
+        }
         if (savedInstanceState == null) {
             if (firstLaunchManager.isFirstLaunch()) {
                 bottomNav.setVisibility(View.GONE);
-                currentFragment = new RegistrationFragment();
+                currentFragment = new LoginFragment();
             } else {
                 bottomNav.setVisibility(View.VISIBLE);
                 currentFragment = new HomeFragment();
@@ -69,10 +82,10 @@ public class MainActivity extends AppCompatActivity {
     private void loadFragment(Fragment fragment, boolean addToBackStack) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.setCustomAnimations(
-                android.R.anim.fade_in,
-                android.R.anim.fade_out,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
+                R.anim.fade_in,
+                R.anim.fade_out,
+                R.anim.fade_in,
+                R.anim.fade_out
         );
         transaction.replace(R.id.fragment_container, fragment);
         if (addToBackStack) {
@@ -97,4 +110,14 @@ public class MainActivity extends AppCompatActivity {
 
         setupNavigation();
     }
+    public void goToHomeAfterLogin() {
+        bottomNav.setVisibility(View.VISIBLE);
+        setupNavigation();
+        currentFragment = new HomeFragment();
+        loadFragment(currentFragment, false);
+    }
+    public void hideNavigation() {
+        bottomNav.setVisibility(View.GONE);
+    }
+
 }

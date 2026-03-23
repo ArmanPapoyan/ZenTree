@@ -58,6 +58,15 @@ public class RegistrationFragment extends Fragment {
                 }
             }
         });
+        Button buttonGoToLogin = view.findViewById(R.id.button_go_to_login);
+        buttonGoToLogin.setOnClickListener(v -> {
+            LoginFragment loginFragment = new LoginFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.fragment_container, loginFragment)
+                    .commit();
+        });
         return view;
     }
     private void showVerificationDialog(FirebaseUser user) {

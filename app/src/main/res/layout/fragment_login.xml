@@ -11,28 +11,16 @@
         android:id="@+id/text_view_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Добро пожаловать в ZenTree!"
+        android:text="С возвращением в ZenTree!"
         android:textColor="#2E7D32"
         android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_name"
+        app:layout_constraintBottom_toTopOf="@+id/edit_text_email"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginBottom="32dp"/>
-
-    <EditText
-        android:id="@+id/edit_text_name"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Имя пользователя"
-        android:padding="16dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_email"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:layout_marginTop="80dp"
+        android:layout_marginBottom="48dp"/>
 
     <EditText
         android:id="@+id/edit_text_email"
@@ -56,45 +44,32 @@
         android:inputType="textPassword"
         android:padding="16dp"
         android:background="@drawable/edit_text_background"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_screen_time"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <EditText
-        android:id="@+id/edit_text_screen_time"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Сколько часов в день вы в телефоне?"
-        android:inputType="number"
-        android:padding="16dp"
-        android:background="@drawable/edit_text_background"
         android:layout_marginBottom="32dp"
         app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/button_start"
+        app:layout_constraintBottom_toTopOf="@+id/button_login"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <Button
-        android:id="@+id/button_start"
+        android:id="@+id/button_login"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Начать"
+        android:text="Войти"
         android:backgroundTint="#388E3C"
         android:textColor="#FFFFFF"
         android:padding="16dp"
         app:cornerRadius="50dp"
         app:layout_constraintWidth_percent="0.5"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_register"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="100dp"/>
+        android:layout_marginBottom="16dp"/>
+
     <Button
-        android:id="@+id/button_go_to_login"
+        android:id="@+id/button_register"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Уже есть аккаунт? Войти"
+        android:text="Нет аккаунта? Зарегистрироваться"
         android:backgroundTint="#00000000"
         android:textColor="#388E3C"
         android:padding="12dp"
@@ -102,4 +77,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="32dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
