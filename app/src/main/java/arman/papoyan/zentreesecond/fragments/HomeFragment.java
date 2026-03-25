@@ -34,6 +34,8 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private ProgressBar treeProgressBar;
     private Button startFocusButton;
 
+    private TextView textViewTime;
+    private TextView textViewProgress;
     private TreeManager treeManager;
     private TreeModel tree;
     private ScreenStateReceiver screenReceiver;
@@ -58,7 +60,8 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         treeProgressBar = view.findViewById(R.id.tree_progress_bar);
         startFocusButton = view.findViewById(R.id.btn_start_focus);
         growthStatusText = view.findViewById(R.id.growth_status_text);
-
+        textViewTime = view.findViewById(R.id.text_view_time);
+        textViewProgress = view.findViewById(R.id.text_view_progress);
         treeManager = new TreeManager(requireActivity());
         tree = treeManager.loadTree();
 
@@ -176,7 +179,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
                     if (secondsPassed >= 10) {
                         int experienceToAdd = secondsPassed / 10;
                         if (experienceToAdd > 0) {
-                            tree.addExperience(experienceToAdd);
+                            tree.addMinutes(experienceToAdd);
                             treeManager.saveTree(tree);
                             updateTreeUI();
                             screenOffTime = currentTime;
@@ -198,10 +201,17 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     }
 
     private void updateTreeUI() {
-        int currentStage = tree.getCurrentStage();
+        int totalMinutes = tree.getTotalMinutes();
+        int hours = totalMinutes / 60;
+        int minutes = totalMinutes % 60;
         int progress = tree.getProgressPercentage();
+        int currentStage = tree.getCurrentStage();
+
         treeLevelText.setText("Уровень " + tree.getLevel() + " • Стадия " + currentStage);
         treeProgressBar.setProgress(progress);
+        textViewTime.setText(hours + " ч " + minutes + " мин");
+        textViewProgress.setText(progress + "%");
+
         updateTreeImage(currentStage);
         updateMotivationText();
     }

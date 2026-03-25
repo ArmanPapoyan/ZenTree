@@ -1,7 +1,10 @@
 package arman.papoyan.zentreesecond.fragments;
 
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,13 +27,18 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
+import arman.papoyan.zentreesecond.model.TreeModel;
 import arman.papoyan.zentreesecond.models.Task;
+import arman.papoyan.zentreesecond.utils.TreeManager;
 
 public class TasksFragment extends Fragment {
 
@@ -47,6 +55,7 @@ public class TasksFragment extends Fragment {
     private int selectedTargetMinute = 0;
     private int selectedEndHour = 13;
     private int selectedEndMinute = 0;
+    private int dailyTaskMinutes = 0;
 
     @Nullable
     @Override
@@ -67,21 +76,66 @@ public class TasksFragment extends Fragment {
             return view;
         }
 
+        SharedPreferences prefs = getActivity().getSharedPreferences("task_rewards", Context.MODE_PRIVATE);
+        String lastDate = prefs.getString("last_date", "");
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        if (!today.equals(lastDate)) {
+            dailyTaskMinutes = 0;
+            prefs.edit().putInt("daily_minutes", 0).putString("last_date", today).apply();
+        } else {
+            dailyTaskMinutes = prefs.getInt("daily_minutes", 0);
+        }
+
         taskList = new ArrayList<>();
         adapter = new TaskAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
-
-        loadTasksFromFirestore();
 
         adapter.setOnTaskClickListener(task -> {
 
         });
 
         adapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
+            String taskId = task.getId();
+            Log.d("TASKS", "=== НАЧАЛО ОБНОВЛЕНИЯ ===");
+            Log.d("TASKS", "taskId: " + taskId);
+            Log.d("TASKS", "userId: " + userId);
+            Log.d("TASKS", "isChecked: " + isChecked);
+
             db.collection("tasks").document(userId)
-                    .collection("userTasks").document(task.getId())
-                    .update("isCompleted", isChecked);
+                    .collection("userTasks").document(taskId)
+                    .update("completed", isChecked)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("TASKS", "✅ УСПЕШНО! completed обновлено на " + isChecked);
+                        if (isChecked) {
+                            if (task.getPriority() == 1 && dailyTaskMinutes < 3) {
+                                TreeManager treeManager = new TreeManager(getActivity());
+                                TreeModel tree = treeManager.getCurrentTree();
+                                tree.addMinutes(5);
+                                treeManager.saveTree(tree);
+
+                                dailyTaskMinutes++;
+
+                                SharedPreferences prefs2 = getActivity().getSharedPreferences("task_rewards", Context.MODE_PRIVATE);
+                                prefs2.edit().putInt("daily_minutes", dailyTaskMinutes).apply();
+
+                                if (dailyTaskMinutes == 1) {
+                                    String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                                    prefs2.edit().putString("last_date", todayDate).apply();
+                                }
+
+                                Toast.makeText(getActivity(), "+5 минут к дереву! Осталось: " + (3 - dailyTaskMinutes), Toast.LENGTH_SHORT).show();
+                            }
+                            else if (dailyTaskMinutes >= 3) {
+                                Toast.makeText(getActivity(), "Лимит бонусов на сегодня исчерпан (3/3)", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("TASKS", "❌ ОШИБКА: " + e.getMessage());
+                        Toast.makeText(getActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
         });
 
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
@@ -97,12 +151,15 @@ public class TasksFragment extends Fragment {
                         return;
                     }
 
-                    taskList.clear();
+                    List<Task> newTasks = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : value) {
                         Task task = doc.toObject(Task.class);
                         task.setId(doc.getId());
-                        taskList.add(task);
+                        newTasks.add(task);
                     }
+
+                    taskList.clear();
+                    taskList.addAll(newTasks);
                     adapter.setTasks(taskList);
                 });
     }

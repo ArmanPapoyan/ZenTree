@@ -2,12 +2,13 @@ package arman.papoyan.zentreesecond.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+
 import arman.papoyan.zentreesecond.model.TreeModel;
 
 public class TreeManager {
     private static final String PREFS_NAME = "ZenTreePrefs";
     private static final String KEY_LEVEL = "tree_level";
-    private static final String KEY_EXP = "tree_experience";
+    private static final String KEY_TOTAL_MINUTES = "total_minutes";
     private static final String KEY_STAGE = "tree_stage";
 
     private SharedPreferences prefs;
@@ -21,7 +22,7 @@ public class TreeManager {
     public void saveTree(TreeModel tree) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(KEY_LEVEL, tree.getLevel());
-        editor.putInt(KEY_EXP, tree.getExperience());
+        editor.putInt(KEY_TOTAL_MINUTES, tree.getTotalMinutes());
         editor.putInt(KEY_STAGE, tree.getCurrentStage());
         editor.apply();
         currentTree = tree;
@@ -30,25 +31,18 @@ public class TreeManager {
     public TreeModel loadTree() {
         if (currentTree == null) {
             currentTree = new TreeModel();
-            int savedLevel = prefs.getInt(KEY_LEVEL, 1);
-            int savedExp = prefs.getInt(KEY_EXP, 0);
-            int savedStage = prefs.getInt(KEY_STAGE, 1);
-            restoreTreeState(savedLevel, savedExp, savedStage);
+            int savedMinutes = prefs.getInt(KEY_TOTAL_MINUTES, 0);
+            if (savedMinutes > 0) {
+                currentTree.addMinutes(savedMinutes);
+            }
         }
         return currentTree;
     }
 
-    private void restoreTreeState(int level, int exp, int stage) {
-        currentTree = new TreeModel();
-        int targetExp = exp;
-        while (targetExp > 0) {
-            int expToAdd = Math.min(targetExp, 10);
-            currentTree.addExperience(expToAdd);
-            targetExp -= expToAdd;
-        }
-    }
-
     public TreeModel getCurrentTree() {
+        if (currentTree == null) {
+            currentTree = loadTree();
+        }
         return currentTree;
     }
 

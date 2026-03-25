@@ -4,7 +4,7 @@ public class Task {
     private String id;
     private String title;
     private String description;
-    private boolean isCompleted;
+    private boolean completed;
     private long createdAt;
     private int priority;
     private int timeType;
@@ -29,7 +29,7 @@ public class Task {
         this.endHour = endHour;
         this.endMinute = endMinute;
         this.createdAt = System.currentTimeMillis();
-        this.isCompleted = false;
+        this.completed = false;
     }
 
     public String getId() { return id; }
@@ -41,8 +41,8 @@ public class Task {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public boolean isCompleted() { return isCompleted; }
-    public void setCompleted(boolean completed) { isCompleted = completed; }
+    public boolean isCompleted() { return completed; }
+    public void setCompleted(boolean completed) { this.completed = completed; }
 
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
