@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">ZenTree</string>
+    <string name="Q1">Каждое маленькое усилие ведёт к большим переменам 🌱</string>
+    <string name="Q2">Твой фокус — твоя сила 💪</string>
+    <string name="Q3">Дерево растёт вместе с тобой 🌳</string>
+    <string name="Q4">Один шаг за раз, но всегда вперёд 🚶‍</string>
+    <string name="Q5">Сегодняшние семена — завтрашний лес 🌲</string>
+    <string name="Q6">Каждая минута фокуса делает тебя сильнее ⏰</string>
 </resources>

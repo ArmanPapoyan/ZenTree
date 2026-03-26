@@ -1,8 +1,12 @@
 package arman.papoyan.zentreesecond.fragments;
 
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -17,6 +22,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.model.TreeModel;
@@ -24,7 +33,7 @@ import arman.papoyan.zentreesecond.utils.ScreenStateReceiver;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 
 public class HomeFragment extends Fragment implements ScreenStateReceiver.ScreenStateListener {
-
+    private SharedPreferences dayPrefs;
     private FrameLayout treeContainer;
     private ImageView treeImage;
     private ImageView treeGrowthOverlay;
@@ -62,8 +71,18 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         growthStatusText = view.findViewById(R.id.growth_status_text);
         textViewTime = view.findViewById(R.id.text_view_time);
         textViewProgress = view.findViewById(R.id.text_view_progress);
+
         treeManager = new TreeManager(requireActivity());
         tree = treeManager.loadTree();
+
+        dayPrefs = getActivity().getSharedPreferences("day_check", Context.MODE_PRIVATE);
+        String lastOpenDate = dayPrefs.getString("last_open_date", "");
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        if (!today.equals(lastOpenDate)) {
+            dayPrefs.edit().putString("last_open_date", today).apply();
+            showNewDayAnimation();
+        }
 
         growthHandler = new Handler();
 
@@ -240,12 +259,12 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
     private void updateMotivationText() {
         String[] motivations = {
-                "Каждое маленькое усилие ведёт к большим переменам 🌱",
-                "Твой фокус — твоя сила 💪",
-                "Дерево растёт вместе с тобой 🌳",
-                "Один шаг за раз, но всегда вперёд 🚶‍♂️",
-                "Сегодняшние семена — завтрашний лес 🌲",
-                "Каждая минута фокуса делает тебя сильнее ⏰"
+                getString(R.string.Q1),
+                getString(R.string.Q2),
+                getString(R.string.Q3),
+                getString(R.string.Q4),
+                getString(R.string.Q5),
+                getString(R.string.Q6)
         };
         Random random = new Random();
         String motivation = motivations[random.nextInt(motivations.length)];
@@ -266,5 +285,43 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
                 Log.e(TAG, "Ошибка при отписке от receiver", e);
             }
         }
+    }
+    private void showNewDayAnimation() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.TransparentDialog);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_new_day, null);
+        builder.setView(dialogView);
+        builder.setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.show();
+
+        TextView emojiView = dialogView.findViewById(R.id.text_view_new_day);
+        TextView titleView = dialogView.findViewById(R.id.text_view_title);
+        TextView messageView = dialogView.findViewById(R.id.text_view_message);
+
+        emojiView.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(500)
+                .setInterpolator(new OvershootInterpolator())
+                .start();
+
+        titleView.animate()
+                .alpha(1f)
+                .setDuration(400)
+                .setStartDelay(300)
+                .start();
+
+        messageView.animate()
+                .alpha(1f)
+                .setDuration(400)
+                .setStartDelay(600)
+                .withEndAction(() -> {
+                    new Handler().postDelayed(() -> dialog.dismiss(), 1500);
+                })
+                .start();
     }
 }
