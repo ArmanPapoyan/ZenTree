@@ -1,10 +1,13 @@
 package arman.papoyan.zentreesecond.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -21,7 +24,8 @@ public class LoginFragment extends Fragment {
     private FirebaseAuth mAuth;
     private EditText editTextEmail;
     private EditText editTextPassword;
-
+    private CheckBox checkBoxRememberMe;
+    private SharedPreferences prefs;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
@@ -30,6 +34,8 @@ public class LoginFragment extends Fragment {
         Button buttonRegister = view.findViewById(R.id.button_register);
         editTextEmail = view.findViewById(R.id.edit_text_email);
         editTextPassword = view.findViewById(R.id.edit_text_password);
+        checkBoxRememberMe = view.findViewById(R.id.checkBox_remember_me);
+        prefs = getActivity().getSharedPreferences("login_prefs", Context.MODE_PRIVATE);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -45,6 +51,16 @@ public class LoginFragment extends Fragment {
                             if (task.isSuccessful()) {
                                 FirebaseUser user = mAuth.getCurrentUser();
                                 if (user.isEmailVerified()) {
+                                    if (checkBoxRememberMe.isChecked()) {
+                                        prefs.edit()
+                                                .putBoolean("remember_me", true)
+                                                .putString("email", email)
+                                                .putString("password", password)
+                                                .apply();
+                                    } else {
+                                        prefs.edit().clear().apply();
+                                    }
+
                                     MainActivity activity = (MainActivity) getActivity();
                                     activity.goToHomeAfterLogin();
                                 } else {
@@ -65,7 +81,14 @@ public class LoginFragment extends Fragment {
                     .replace(R.id.fragment_container, registrationFragment)
                     .commit();
         });
-
+        boolean isRemembered = prefs.getBoolean("remember_me", false);
+        if (isRemembered) {
+            String savedEmail = prefs.getString("email", "");
+            String savedPassword = prefs.getString("password", "");
+            editTextEmail.setText(savedEmail);
+            editTextPassword.setText(savedPassword);
+            checkBoxRememberMe.setChecked(true);
+        }
         return view;
     }
 }
