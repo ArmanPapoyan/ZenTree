@@ -72,11 +72,24 @@
         android:padding="16dp"
         app:cornerRadius="50dp"
         app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintBottom_toTopOf="@+id/guest"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp"/>
+    <Button
+        android:id="@+id/guest"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Войти как гость"
+        android:backgroundTint="#388E3C"
+        android:textColor="#FFFFFF"
+        android:padding="16dp"
+        app:cornerRadius="50dp"
+        app:layout_constraintWidth_percent="0.5"
         app:layout_constraintBottom_toTopOf="@+id/button_register"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="16dp"/>
-
     <Button
         android:id="@+id/button_register"
         android:layout_width="wrap_content"

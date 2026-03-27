@@ -1,11 +1,13 @@
 package arman.papoyan.zentreesecond;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -16,7 +18,6 @@ import arman.papoyan.zentreesecond.fragments.LoginFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.ProfileFragment;
-import arman.papoyan.zentreesecond.utils.FirstLaunchManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,30 +30,29 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNav = findViewById(R.id.bottom_navigation);
-        FirstLaunchManager firstLaunchManager = new FirstLaunchManager(this);
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null && currentUser.isEmailVerified()) {
-            bottomNav.setVisibility(View.VISIBLE);
-            currentFragment = new HomeFragment();
-            loadFragment(currentFragment, false);
-            setupNavigation();
-        } else {
-            bottomNav.setVisibility(View.GONE);
-            currentFragment = new LoginFragment();
-            loadFragment(currentFragment, false);
+        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
+        boolean isGuest = prefs.getBoolean("is_guest", false);
+        String savedGuestUid = prefs.getString("guest_uid", "");
+        if (currentUser != null && currentUser.isAnonymous() && !isGuest) {
+            isGuest = true;
+            prefs.edit().putBoolean("is_guest", true).putString("guest_uid", currentUser.getUid()).apply();
         }
         if (savedInstanceState == null) {
-            if (firstLaunchManager.isFirstLaunch()) {
-                bottomNav.setVisibility(View.GONE);
-                currentFragment = new LoginFragment();
-            } else {
+            if (isGuest || currentUser != null) {
                 bottomNav.setVisibility(View.VISIBLE);
                 currentFragment = new HomeFragment();
+                loadFragment(currentFragment, false);
                 setupNavigation();
+            } else {
+                bottomNav.setVisibility(View.GONE);
+                currentFragment = new LoginFragment();
+                loadFragment(currentFragment, false);
             }
-            loadFragment(currentFragment, false);
         }
     }
+
     private void setupNavigation() {
         bottomNav.setOnItemSelectedListener(item -> {
             Fragment fragment = null;
@@ -102,22 +102,23 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
     public void goToHomeFragment() {
         bottomNav.setVisibility(View.VISIBLE);
-
         currentFragment = new HomeFragment();
         loadFragment(currentFragment, false);
-
         setupNavigation();
     }
+
     public void goToHomeAfterLogin() {
         bottomNav.setVisibility(View.VISIBLE);
         setupNavigation();
         currentFragment = new HomeFragment();
         loadFragment(currentFragment, false);
+        bottomNav.setSelectedItemId(R.id.nav_home);
     }
+
     public void hideNavigation() {
         bottomNav.setVisibility(View.GONE);
     }
-
 }

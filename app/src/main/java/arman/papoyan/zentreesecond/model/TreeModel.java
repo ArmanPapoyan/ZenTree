@@ -6,7 +6,7 @@ public class TreeModel {
     private int currentStage = 1;
     private long growthStartTime = 0;
     private boolean isGrowing = false;
-
+    private String userId;
     public int getLevel() {
         return level;
     }
