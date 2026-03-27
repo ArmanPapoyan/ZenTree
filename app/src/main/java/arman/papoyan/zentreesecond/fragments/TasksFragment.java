@@ -30,16 +30,14 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
-import arman.papoyan.zentreesecond.model.TreeModel;
 import arman.papoyan.zentreesecond.models.Task;
+import arman.papoyan.zentreesecond.model.TreeModel;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 
 public class TasksFragment extends Fragment {

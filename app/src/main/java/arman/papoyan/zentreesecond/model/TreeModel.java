@@ -30,7 +30,6 @@ public class TreeModel {
         if (newLevel > level) {
             level = newLevel;
         }
-
         int newStage = Math.min(level, 6);
         if (newStage > currentStage) {
             currentStage = newStage;

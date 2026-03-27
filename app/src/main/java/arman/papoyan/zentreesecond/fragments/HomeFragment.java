@@ -42,7 +42,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private TextView growthStatusText;
     private ProgressBar treeProgressBar;
     private Button startFocusButton;
-
+    private Button test;
     private TextView textViewTime;
     private TextView textViewProgress;
     private TreeManager treeManager;
@@ -71,6 +71,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         growthStatusText = view.findViewById(R.id.growth_status_text);
         textViewTime = view.findViewById(R.id.text_view_time);
         textViewProgress = view.findViewById(R.id.text_view_progress);
+        test = view.findViewById(R.id.test);
 
         treeManager = new TreeManager(requireActivity());
         tree = treeManager.loadTree();
@@ -110,7 +111,11 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         int currentStage = tree.getCurrentStage();
         updateTreeImage(currentStage);
         updateTreeUI();
-
+        test.setOnClickListener(v -> {
+            tree.addMinutes(30);
+            updateTreeUI();
+            Toast.makeText(getActivity(),"Фокус-режим включен! Выключи экран, чтобы дерево росло.", Toast.LENGTH_LONG).show();
+        });
         return view;
     }
 
