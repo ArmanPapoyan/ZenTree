@@ -6,4 +6,5 @@
     <string name="Q4">Один шаг за раз, но всегда вперёд 🚶‍</string>
     <string name="Q5">Сегодняшние семена — завтрашний лес 🌲</string>
     <string name="Q6">Каждая минута фокуса делает тебя сильнее ⏰</string>
+    <string name="accessibility_service_description"></string>
 </resources>

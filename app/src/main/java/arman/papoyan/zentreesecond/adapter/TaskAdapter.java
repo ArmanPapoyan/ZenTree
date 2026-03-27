@@ -38,12 +38,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 if (t1.isCompleted() != t2.isCompleted()) {
                     return Boolean.compare(t1.isCompleted(), t2.isCompleted());
                 }
-                if (t1.getPriority() != t2.getPriority()) {
-                    return Integer.compare(t1.getPriority(), t2.getPriority());
-                }
-                int time1 = t1.getTargetHour() * 60 + t1.getTargetMinute();
-                int time2 = t2.getTargetHour() * 60 + t2.getTargetMinute();
-                return Integer.compare(time1, time2);
+                return Integer.compare(t1.getPriority(), t2.getPriority());
             }
         });
         this.tasks = tasks;
@@ -71,7 +66,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task currentTask = tasks.get(position);
         holder.textViewTitle.setText(currentTask.getTitle());
         holder.textViewDescription.setText(currentTask.getDescription());
+
+        // ВАЖНО: отключаем слушатель перед установкой значения
+        holder.checkBoxCompleted.setOnCheckedChangeListener(null);
         holder.checkBoxCompleted.setChecked(currentTask.isCompleted());
+        holder.checkBoxCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (checkListener != null) {
+                // НЕ обновляем currentTask здесь — это сделает listener
+                checkListener.onTaskChecked(currentTask, isChecked);
+            }
+        });
 
         String timeText = formatTimeText(currentTask);
         holder.textViewTime.setText(timeText);
@@ -89,13 +93,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 holder.textViewPriority.setTextColor(holder.itemView.getContext().getColor(android.R.color.holo_green_dark));
                 break;
         }
-
-        holder.checkBoxCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (checkListener != null) {
-                currentTask.setCompleted(isChecked);
-                checkListener.onTaskChecked(currentTask, isChecked);
-            }
-        });
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {

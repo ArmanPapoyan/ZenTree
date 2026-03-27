@@ -30,6 +30,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -126,8 +128,7 @@ public class TasksFragment extends Fragment {
                                 }
 
                                 Toast.makeText(getActivity(), "+5 минут к дереву! Осталось: " + (3 - dailyTaskMinutes), Toast.LENGTH_SHORT).show();
-                            }
-                            else if (dailyTaskMinutes >= 3) {
+                            } else if (dailyTaskMinutes >= 3) {
                                 Toast.makeText(getActivity(), "Лимит бонусов на сегодня исчерпан (3/3)", Toast.LENGTH_SHORT).show();
                             }
                         }
