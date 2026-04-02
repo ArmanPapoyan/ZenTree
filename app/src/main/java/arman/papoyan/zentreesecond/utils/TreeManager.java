@@ -83,4 +83,23 @@ public class TreeManager {
         }
         return currentTree;
     }
+    public void resetTree(TreeModel tree, String todayDate) {
+        tree.resetToDefault(todayDate);
+        this.currentTree = tree;
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt(KEY_TOTAL_MINUTES, 0);
+        editor.apply();
+        if (!isGuest) {
+            firestoreManager.saveTree(tree, new TreeFirestoreManager.TreeSaveCallback() {
+                @Override
+                public void onSuccess() {
+                    Log.d("TreeManager", "Прогресс обнулен в Firestore");
+                }
+                @Override
+                public void onError(String error) {
+                    Log.e("TreeManager", "Ошибка при обнулении в Firestore: " + error);
+                }
+            });
+        }
+    }
 }

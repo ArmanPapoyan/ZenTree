@@ -94,15 +94,6 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
     }
 
-    @Override
-    public void onBackPressed() {
-        if (bottomNav.getSelectedItemId() != R.id.nav_home) {
-            bottomNav.setSelectedItemId(R.id.nav_home);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
     public void goToHomeFragment() {
         bottomNav.setVisibility(View.VISIBLE);
         currentFragment = new HomeFragment();

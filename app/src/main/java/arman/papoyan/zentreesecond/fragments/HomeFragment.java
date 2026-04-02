@@ -82,6 +82,9 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
         if (!today.equals(lastOpenDate)) {
             dayPrefs.edit().putString("last_open_date", today).apply();
+            tree.resetToDefault(today);
+            treeManager.saveTree(tree);
+            updateTreeUI();
             showNewDayAnimation();
         }
 

@@ -7,6 +7,8 @@ public class TreeModel {
     private long growthStartTime = 0;
     private boolean isGrowing = false;
     private String userId;
+    private String lastUpdateDate = "";
+
     public int getLevel() {
         return level;
     }
@@ -21,6 +23,14 @@ public class TreeModel {
 
     public boolean isGrowing() {
         return isGrowing;
+    }
+
+    public String getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(String date) {
+        this.lastUpdateDate = date;
     }
 
     public void addMinutes(int minutes) {
@@ -55,5 +65,11 @@ public class TreeModel {
                 addMinutes(minutesEarned);
             }
         }
+    }
+    public void resetToDefault(String today) {
+        this.level = 1;
+        this.totalMinutes = 0;
+        this.currentStage = 1;
+        this.lastUpdateDate = today;
     }
 }

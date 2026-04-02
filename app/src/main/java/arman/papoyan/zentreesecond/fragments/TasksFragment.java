@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,8 +35,8 @@ import java.util.Locale;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
-import arman.papoyan.zentreesecond.models.Task;
 import arman.papoyan.zentreesecond.model.TreeModel;
+import arman.papoyan.zentreesecond.models.Task;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 
 public class TasksFragment extends Fragment {
@@ -97,19 +96,18 @@ public class TasksFragment extends Fragment {
         });
 
         adapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
+            if (task.isCompleted() == isChecked) return;
+
             String taskId = task.getId();
-            Log.d("TASKS", "=== НАЧАЛО ОБНОВЛЕНИЯ ===");
-            Log.d("TASKS", "taskId: " + taskId);
-            Log.d("TASKS", "userId: " + userId);
-            Log.d("TASKS", "isChecked: " + isChecked);
+            task.setCompleted(isChecked);
 
             db.collection("tasks").document(userId)
                     .collection("userTasks").document(taskId)
                     .update("completed", isChecked)
                     .addOnSuccessListener(aVoid -> {
-                        Log.d("TASKS", "✅ УСПЕШНО! completed обновлено на " + isChecked);
                         if (isChecked) {
                             if (task.getPriority() == 1 && dailyTaskMinutes < 3) {
+
                                 TreeManager treeManager = new TreeManager(getActivity());
                                 TreeModel tree = treeManager.getCurrentTree();
                                 tree.addMinutes(5);
@@ -120,20 +118,16 @@ public class TasksFragment extends Fragment {
                                 SharedPreferences prefs2 = getActivity().getSharedPreferences("task_rewards", Context.MODE_PRIVATE);
                                 prefs2.edit().putInt("daily_minutes", dailyTaskMinutes).apply();
 
-                                if (dailyTaskMinutes == 1) {
-                                    String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-                                    prefs2.edit().putString("last_date", todayDate).apply();
-                                }
-
-                                Toast.makeText(getActivity(), "+5 минут к дереву! Осталось: " + (3 - dailyTaskMinutes), Toast.LENGTH_SHORT).show();
-                            } else if (dailyTaskMinutes >= 3) {
-                                Toast.makeText(getActivity(), "Лимит бонусов на сегодня исчерпан (3/3)", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), "🌟 +5 минут! Бонусов сегодня: " + dailyTaskMinutes + "/3", Toast.LENGTH_SHORT).show();
+                            } else if (task.getPriority() == 1 && dailyTaskMinutes >= 3) {
+                                Toast.makeText(getActivity(), "Лимит бонусов (3/3) достигнут", Toast.LENGTH_SHORT).show();
                             }
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Log.e("TASKS", "❌ ОШИБКА: " + e.getMessage());
-                        Toast.makeText(getActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        task.setCompleted(!isChecked);
+                        adapter.notifyDataSetChanged();
+                        Toast.makeText(getActivity(), "Ошибка синхронизации", Toast.LENGTH_SHORT).show();
                     });
         });
 
