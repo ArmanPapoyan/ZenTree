@@ -2,8 +2,6 @@ package arman.papoyan.zentreesecond.fragments;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -101,11 +99,9 @@ public class LoginFragment extends Fragment {
 
         buttonRegister.setOnClickListener(v -> {
             RegistrationFragment registrationFragment = new RegistrationFragment();
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                    .replace(R.id.fragment_container, registrationFragment)
-                    .commit();
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).switchAuthFragment(registrationFragment);
+            }
         });
         boolean isRemembered = prefs.getBoolean("remember_me", false);
         if (isRemembered) {

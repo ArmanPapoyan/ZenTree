@@ -112,4 +112,10 @@ public class MainActivity extends AppCompatActivity {
     public void hideNavigation() {
         bottomNav.setVisibility(View.GONE);
     }
+
+    public void switchAuthFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
 }

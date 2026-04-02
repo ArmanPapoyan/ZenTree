@@ -1,105 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#FAFAFA">
+    android:background="#FAFAFA"
+    android:orientation="horizontal"
+    android:padding="24dp">
 
     <TextView
         android:id="@+id/text_view_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Добро пожаловать в ZenTree!"
+        android:layout_marginTop="32dp"
+        android:text="Регистрация"
         android:textColor="#2E7D32"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginBottom="32dp"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/edit_text_name"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:id="@+id/step_1_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Имя пользователя"
-        android:padding="16dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_email"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:orientation="vertical"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/button_next"
+        app:layout_constraintTop_toBottomOf="@id/text_view_title">
 
-    <EditText
-        android:id="@+id/edit_text_email"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Электронная почта"
-        android:inputType="textEmailAddress"
-        android:padding="16dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_password"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Электронная почта"
+            app:boxStrokeColor="#388E3C">
 
-    <EditText
-        android:id="@+id/edit_text_password"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Пароль"
-        android:inputType="textPassword"
-        android:padding="16dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/edit_text_screen_time"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <EditText
-        android:id="@+id/edit_text_screen_time"
-        android:layout_width="0dp"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Подтвердите почту"
+            app:boxStrokeColor="#388E3C">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_confirm_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/step_2_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Сколько часов в день вы в телефоне?"
-        android:inputType="number"
-        android:padding="16dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginBottom="32dp"
-        app:layout_constraintWidth_percent="0.8"
-        app:layout_constraintBottom_toTopOf="@+id/button_start"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/button_next"
+        app:layout_constraintTop_toBottomOf="@id/text_view_title">
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Придумайте пароль"
+            app:boxStrokeColor="#388E3C"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Повторите пароль"
+            app:boxStrokeColor="#388E3C"
+            app:passwordToggleEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_confirm_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/step_3_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/button_next"
+        app:layout_constraintTop_toBottomOf="@id/text_view_title">
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Как вас зовут?"
+            app:boxStrokeColor="#388E3C">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Часов в телефоне в день"
+            app:boxStrokeColor="#388E3C">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_screen_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
 
     <Button
-        android:id="@+id/button_start"
+        android:id="@+id/button_next"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Начать"
+        android:layout_marginBottom="16dp"
         android:backgroundTint="#388E3C"
-        android:textColor="#FFFFFF"
         android:padding="16dp"
-        app:cornerRadius="50dp"
-        app:layout_constraintWidth_percent="0.5"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:text="Далее"
+        android:textColor="#FFFFFF"
+        app:cornerRadius="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/button_go_to_login"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="100dp"/>
+        app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/button_go_to_login"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:text="Уже есть аккаунт? Войти"
-        android:backgroundTint="#00000000"
         android:textColor="#388E3C"
-        android:padding="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="32dp"/>
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
