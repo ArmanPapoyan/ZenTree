@@ -24,6 +24,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
@@ -48,6 +50,8 @@ public class TasksFragment extends Fragment {
 
     private FirebaseFirestore db;
     private String userId;
+
+    private ListenerRegistration tasksListener;
 
     private int selectedTimeType = 1;
     private int selectedTargetHour = 12;
@@ -137,12 +141,30 @@ public class TasksFragment extends Fragment {
     }
 
     private void loadTasksFromFirestore() {
-        db.collection("tasks").document(userId).collection("userTasks")
+        if (tasksListener != null) {
+            tasksListener.remove();
+        }
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null || !currentUser.getUid().equals(userId)) {
+            return;
+        }
+
+        tasksListener = db.collection("tasks").document(userId).collection("userTasks")
                 .addSnapshotListener((value, error) -> {
+                    if (getActivity() == null || !isAdded()) {
+                        return;
+                    }
+
                     if (error != null) {
+                        if (error.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                            return;
+                        }
                         Toast.makeText(getActivity(), "Ошибка загрузки: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         return;
                     }
+
+                    if (value == null) return;
 
                     List<Task> newTasks = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : value) {
@@ -156,6 +178,20 @@ public class TasksFragment extends Fragment {
                     adapter.setTasks(taskList);
                 });
     }
+
+    public void removeListener() {
+        if (tasksListener != null) {
+            tasksListener.remove();
+            tasksListener = null;
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        removeListener();
+    }
+
 
     private void showAddTaskDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

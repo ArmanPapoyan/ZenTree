@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
@@ -42,7 +41,7 @@ public class ProfileFragment extends Fragment {
 
         displayUserInfo(user);
 
-        out.setOnClickListener(v -> logout(user));
+        out.setOnClickListener(v -> logout());
 
         return view;
     }
@@ -66,23 +65,48 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    private void logout(FirebaseUser user) {
+    private void logout() {
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            activity.disableAllFirestoreListeners();
+        }
+        disableFirestoreListeners();
+
+        FirebaseUser user = mAuth.getCurrentUser();
+
         if (user != null && user.isAnonymous()) {
-            user.delete().addOnCompleteListener(task -> {
-                prefs.edit().remove("is_guest").remove("guest_uid").apply();
-                FirebaseAuth.getInstance().signOut();
-                goToLoginFragment();
-            });
+            prefs.edit().clear().apply();
+            mAuth.signOut();
+            goToLoginFragment();
         } else if (user != null) {
-            FirebaseAuth.getInstance().signOut();
+            mAuth.signOut();
             prefs.edit().clear().apply();
             goToLoginFragment();
         } else {
+            prefs.edit().clear().apply();
             goToLoginFragment();
         }
     }
 
+    private void disableFirestoreListeners() {
+        Fragment tasksFragment = getParentFragmentManager().findFragmentByTag("tasks_fragment");
+        if (tasksFragment instanceof TasksFragment) {
+            ((TasksFragment) tasksFragment).removeListener();
+        }
+
+        if (tasksFragment == null) {
+            tasksFragment = getParentFragmentManager().findFragmentById(R.id.fragment_container);
+            if (tasksFragment instanceof TasksFragment) {
+                ((TasksFragment) tasksFragment).removeListener();
+            }
+        }
+    }
+
     private void goToLoginFragment() {
+        if (getActivity() == null || !isAdded()) {
+            return;
+        }
+
         MainActivity activity = (MainActivity) getActivity();
         if (activity != null) {
             activity.hideNavigation();

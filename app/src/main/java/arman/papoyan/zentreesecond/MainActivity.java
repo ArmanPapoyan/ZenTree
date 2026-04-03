@@ -52,7 +52,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
+    public void disableAllFirestoreListeners() {
+        Fragment tasksFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (tasksFragment instanceof TasksFragment) {
+            ((TasksFragment) tasksFragment).removeListener();
+        }
+    }
     private void setupNavigation() {
         bottomNav.setOnItemSelectedListener(item -> {
             Fragment fragment = null;
