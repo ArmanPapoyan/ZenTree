@@ -72,7 +72,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Выбрать время"
-            android:backgroundTint="#388E3C"
+            android:backgroundTint="@color/primary_green"
             android:layout_marginBottom="16dp"/>
 
         <TextView
@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:text="Время не выбрано"
             android:textSize="14sp"
-            android:textColor="#9E9E9E"
+            android:textColor="@color/text_secondary"
             android:layout_marginBottom="16dp"/>
         <Button
             android:id="@+id/button_select_date"

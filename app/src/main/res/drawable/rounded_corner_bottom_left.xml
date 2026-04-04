@@ -1,6 +1,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="@android:color/transparent" />
-    <solid android:color="#E0E0E0" />
+    <solid android:color="@color/default_indicator" />
     <corners
         android:bottomLeftRadius="16dp"
         android:bottomRightRadius="0dp"

@@ -155,7 +155,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         if (isFocusModeActive) {
             startFocusButton.setText("Остановить рост");
             growthStatusText.setText("✅ Фокус-режим включён");
-            growthStatusText.setTextColor(Color.parseColor("#388E3C"));
+            growthStatusText.setTextColor(Color.parseColor("@color/primary_green"));
         } else {
             startFocusButton.setText("Начать фокус-сессию");
             growthStatusText.setText("💤 Фокус-режим выключен");
@@ -170,7 +170,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             screenOffTime = System.currentTimeMillis();
             tree.startGrowth();
             growthStatusText.setText("🌱 Дерево растёт (экран выключен)");
-            growthStatusText.setTextColor(Color.parseColor("#388E3C"));
+            growthStatusText.setTextColor(Color.parseColor("@color/primary_green"));
             startGrowthUpdates();
             Toast.makeText(getActivity(),
                     "Экран выключен - дерево начинает расти!",

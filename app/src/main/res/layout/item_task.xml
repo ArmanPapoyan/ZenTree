@@ -6,7 +6,7 @@
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
-    app:cardBackgroundColor="#FFFFFF"
+    app:cardBackgroundColor="@color/white"
     android:orientation="horizontal">
 
     <LinearLayout
@@ -20,7 +20,7 @@
             android:id="@+id/view_completed_indicator"
             android:layout_width="6dp"
             android:layout_height="match_parent"
-            android:background="#E0E0E0" />
+            android:background="@color/default_indicator" />
         <CheckBox
             android:id="@+id/checkbox_completed"
             android:layout_width="wrap_content"
@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#212121"/>
+                android:textColor="@color/text_primary"/>
 
             <TextView
                 android:id="@+id/text_view_description"
@@ -55,7 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#388E3C"
+                android:textColor="@color/primary_green"
                 android:layout_marginTop="4dp"/>
 
         </LinearLayout>
@@ -68,7 +68,7 @@
             android:textStyle="bold"
             android:gravity="center"
             android:layout_marginStart="16dp"
-            android:textColor="#212121"
+            android:textColor="@color/text_primary"
             android:background="@drawable/rounded_corner_bottom_left"
             />
 

@@ -9,4 +9,5 @@
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#9E9E9E</color>
     <color name="default_indicator">#E0E0E0</color>
+    <color name="completed_green">#388E3C</color>
 </resources>
