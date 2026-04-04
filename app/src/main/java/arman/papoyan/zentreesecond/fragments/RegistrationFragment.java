@@ -29,7 +29,7 @@ public class RegistrationFragment extends Fragment {
 
     private View step1Container, step2Container, step3Container;
 
-    private EditText etEmail, etConfirmEmail, etPass, etConfirmPass, etName, etScreenTime;
+    private EditText etEmail, etPass, etConfirmPass, etName, etScreenTime;
 
     private Button btnNext;
     private TextView textViewTitle;
@@ -46,7 +46,6 @@ public class RegistrationFragment extends Fragment {
         step3Container = view.findViewById(R.id.step_3_container);
 
         etEmail = view.findViewById(R.id.edit_text_email);
-        etConfirmEmail = view.findViewById(R.id.edit_text_confirm_email);
         etPass = view.findViewById(R.id.edit_text_password);
         etConfirmPass = view.findViewById(R.id.edit_text_confirm_password);
         etName = view.findViewById(R.id.edit_text_name);
@@ -82,14 +81,9 @@ public class RegistrationFragment extends Fragment {
 
     private void validateEmailStep() {
         String email = etEmail.getText().toString().trim();
-        String confirmEmail = etConfirmEmail.getText().toString().trim();
 
         if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.setError("Введите корректный email");
-            return;
-        }
-        if (!email.equals(confirmEmail)) {
-            etConfirmEmail.setError("Email не совпадают");
             return;
         }
         showStep(2);
