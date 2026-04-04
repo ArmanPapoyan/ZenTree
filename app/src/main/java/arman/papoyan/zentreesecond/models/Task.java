@@ -12,6 +12,7 @@ public class Task {
     private int targetMinute;
     private int endHour;
     private int endMinute;
+    private String targetDate;
 
     public Task() {
 
@@ -31,6 +32,8 @@ public class Task {
         this.createdAt = System.currentTimeMillis();
         this.completed = false;
     }
+    public String getTargetDate() { return targetDate; }
+    public void setTargetDate(String targetDate) { this.targetDate = targetDate; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

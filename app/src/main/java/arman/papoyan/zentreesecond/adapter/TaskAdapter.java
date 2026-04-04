@@ -7,12 +7,16 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.models.Task;
@@ -25,6 +29,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public interface OnTaskClickListener {
         void onTaskClick(Task task);
+        void onTaskLongClick(Task task);
     }
 
     public interface OnTaskCheckedChangeListener {
@@ -66,21 +71,35 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task currentTask = tasks.get(position);
         holder.textViewTitle.setText(currentTask.getTitle());
         holder.textViewDescription.setText(currentTask.getDescription());
+        View completedIndicator = holder.itemView.findViewById(R.id.view_completed_indicator);
 
-        // ВАЖНО: отключаем слушатель перед установкой значения
         holder.checkBoxCompleted.setOnCheckedChangeListener(null);
         holder.checkBoxCompleted.setChecked(currentTask.isCompleted());
         holder.checkBoxCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (checkListener != null) {
-                // НЕ обновляем currentTask здесь — это сделает listener
                 checkListener.onTaskChecked(currentTask, isChecked);
             }
         });
 
+        if (currentTask.isCompleted()) {
+            completedIndicator.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.primary_green));
+        } else {
+            completedIndicator.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.default_indicator));
+        }
+
+        holder.itemView.setOnLongClickListener(v -> {
+            if (listener != null) {
+                listener.onTaskLongClick(currentTask);
+            }
+            return true;
+        });
         String timeText = formatTimeText(currentTask);
         holder.textViewTime.setText(timeText);
 
         holder.textViewPriority.setText(String.valueOf(currentTask.getPriority()));
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        String taskDate = currentTask.getTargetDate();
+
 
         switch (currentTask.getPriority()) {
             case 1:
@@ -99,6 +118,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 listener.onTaskClick(currentTask);
             }
         });
+        if (taskDate != null && taskDate.compareTo(today) > 0) {
+            holder.itemView.setAlpha(0.5f);
+            holder.checkBoxCompleted.setEnabled(false);
+        } else {
+            holder.itemView.setAlpha(1f);
+            holder.checkBoxCompleted.setEnabled(true);
+        }
+
     }
 
     private String formatTimeText(Task task) {
@@ -144,4 +171,5 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             checkBoxCompleted = itemView.findViewById(R.id.checkbox_completed);
         }
     }
+
 }

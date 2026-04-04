@@ -1,6 +1,7 @@
 package arman.papoyan.zentreesecond.fragments;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,9 +39,7 @@ import java.util.Locale;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
-import arman.papoyan.zentreesecond.model.TreeModel;
 import arman.papoyan.zentreesecond.models.Task;
-import arman.papoyan.zentreesecond.utils.TreeManager;
 
 public class TasksFragment extends Fragment {
 
@@ -59,7 +59,7 @@ public class TasksFragment extends Fragment {
     private int selectedEndHour = 13;
     private int selectedEndMinute = 0;
     private int dailyTaskMinutes = 0;
-
+    private String selectedDate;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -95,10 +95,17 @@ public class TasksFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(adapter);
 
-        adapter.setOnTaskClickListener(task -> {
+        adapter.setOnTaskClickListener(new TaskAdapter.OnTaskClickListener() {
+            @Override
+            public void onTaskClick(Task task) {
+            }
 
+            @Override
+            public void onTaskLongClick(Task task) {
+                showEditTaskDialog(task);
+            }
         });
-
+        setupSwipeToDelete();
         adapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
             if (task.isCompleted() == isChecked) return;
 
@@ -108,26 +115,6 @@ public class TasksFragment extends Fragment {
             db.collection("tasks").document(userId)
                     .collection("userTasks").document(taskId)
                     .update("completed", isChecked)
-                    .addOnSuccessListener(aVoid -> {
-                        if (isChecked) {
-                            if (task.getPriority() == 1 && dailyTaskMinutes < 3) {
-
-                                TreeManager treeManager = new TreeManager(getActivity());
-                                TreeModel tree = treeManager.getCurrentTree();
-                                tree.addMinutes(5);
-                                treeManager.saveTree(tree);
-
-                                dailyTaskMinutes++;
-
-                                SharedPreferences prefs2 = getActivity().getSharedPreferences("task_rewards", Context.MODE_PRIVATE);
-                                prefs2.edit().putInt("daily_minutes", dailyTaskMinutes).apply();
-
-                                Toast.makeText(getActivity(), "🌟 +5 минут! Бонусов сегодня: " + dailyTaskMinutes + "/3", Toast.LENGTH_SHORT).show();
-                            } else if (task.getPriority() == 1 && dailyTaskMinutes >= 3) {
-                                Toast.makeText(getActivity(), "Лимит бонусов (3/3) достигнут", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    })
                     .addOnFailureListener(e -> {
                         task.setCompleted(!isChecked);
                         adapter.notifyDataSetChanged();
@@ -204,8 +191,13 @@ public class TasksFragment extends Fragment {
         RadioGroup radioGroupPriority = dialogView.findViewById(R.id.radio_group_priority);
         Button buttonSelectTime = dialogView.findViewById(R.id.button_select_time);
         TextView textViewSelectedTime = dialogView.findViewById(R.id.text_view_selected_time);
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        Button buttonSelectDate = dialogView.findViewById(R.id.button_select_date);
+        TextView textViewSelectedDate = dialogView.findViewById(R.id.text_view_selected_date);
 
         buttonSelectTime.setOnClickListener(v -> showTimePickerDialog(textViewSelectedTime));
+        buttonSelectDate.setOnClickListener(v -> showDatePickerDialog(textViewSelectedDate));
 
         builder.setTitle("Новая задача")
                 .setPositiveButton("Добавить", (dialog, which) -> {
@@ -224,10 +216,20 @@ public class TasksFragment extends Fragment {
                         Toast.makeText(getActivity(), "Введите название", Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    if (selectedDate != null && selectedDate.compareTo(today) < 0) {
+                        Toast.makeText(getActivity(), "Нельзя выбрать прошедшую дату", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (selectedDate == null) {
+                        selectedDate = today;
+                    }
 
                     Task newTask = new Task(title, description, priority,
                             selectedTimeType, selectedTargetHour, selectedTargetMinute,
                             selectedEndHour, selectedEndMinute);
+
+
+                    newTask.setTargetDate(selectedDate != null ? selectedDate : today);
 
                     String taskId = db.collection("tasks").document(userId)
                             .collection("userTasks").document().getId();
@@ -308,6 +310,7 @@ public class TasksFragment extends Fragment {
             textViewEndLabel.setVisibility(View.VISIBLE);
             timePickerEnd.setVisibility(View.VISIBLE);
         }
+
     }
 
     private void updateSelectedTimeText(TextView textView) {
@@ -330,5 +333,134 @@ public class TasksFragment extends Fragment {
                 break;
         }
         textView.setText(timeText);
+    }
+    private void showDatePickerDialog(TextView textView) {
+        Calendar calendar = Calendar.getInstance();
+        long todayMillis = calendar.getTimeInMillis();
+
+        DatePickerDialog datePicker = new DatePickerDialog(getActivity(),
+                (view, year, month, dayOfMonth) -> {
+                    selectedDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month+1, dayOfMonth);
+                    textView.setText("Дата: " + selectedDate);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH));
+        datePicker.getDatePicker().setMinDate(todayMillis);
+
+        datePicker.show();
+    }
+    private void setupSwipeToDelete() {
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Task taskToDelete = taskList.get(position);
+
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Удалить задачу")
+                        .setMessage("Вы уверены, что хотите удалить \"" + taskToDelete.getTitle() + "\"?")
+                        .setPositiveButton("Да", (dialog, which) -> {
+                            deleteTask(taskToDelete, position);
+                        })
+                        .setNegativeButton("Отмена", (dialog, which) -> {
+                            adapter.notifyItemChanged(position);
+                        })
+                        .show();
+            }
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+    }
+    private void deleteTask(Task task, int position) {
+        db.collection("tasks").document(userId)
+                .collection("userTasks").document(task.getId())
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getActivity(), "Задача удалена", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getActivity(), "Ошибка удаления", Toast.LENGTH_SHORT).show();
+                    adapter.notifyItemChanged(position);
+                });
+    }
+    private void showEditTaskDialog(Task task) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_add_task, null);
+        builder.setView(dialogView);
+
+        EditText editTextTitle = dialogView.findViewById(R.id.edit_text_title);
+        EditText editTextDescription = dialogView.findViewById(R.id.edit_text_description);
+        RadioGroup radioGroupPriority = dialogView.findViewById(R.id.radio_group_priority);
+        Button buttonSelectTime = dialogView.findViewById(R.id.button_select_time);
+        TextView textViewSelectedTime = dialogView.findViewById(R.id.text_view_selected_time);
+
+        editTextTitle.setText(task.getTitle());
+        editTextDescription.setText(task.getDescription());
+
+        switch (task.getPriority()) {
+            case 1:
+                radioGroupPriority.check(R.id.radio_priority_1);
+                break;
+            case 2:
+                radioGroupPriority.check(R.id.radio_priority_2);
+                break;
+            case 3:
+                radioGroupPriority.check(R.id.radio_priority_3);
+                break;
+        }
+
+        selectedTimeType = task.getTimeType();
+        selectedTargetHour = task.getTargetHour();
+        selectedTargetMinute = task.getTargetMinute();
+        selectedEndHour = task.getEndHour();
+        selectedEndMinute = task.getEndMinute();
+        updateSelectedTimeText(textViewSelectedTime);
+
+        buttonSelectTime.setOnClickListener(v -> showTimePickerDialog(textViewSelectedTime));
+
+        builder.setTitle("Редактировать задачу")
+                .setPositiveButton("Сохранить", (dialog, which) -> {
+                    String title = editTextTitle.getText().toString().trim();
+                    String description = editTextDescription.getText().toString().trim();
+                    int priority = 1;
+                    int selectedId = radioGroupPriority.getCheckedRadioButtonId();
+                    if (selectedId == R.id.radio_priority_2) {
+                        priority = 2;
+                    } else if (selectedId == R.id.radio_priority_3) {
+                        priority = 3;
+                    }
+                    if (title.isEmpty()) {
+                        Toast.makeText(getActivity(), "Введите название", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    task.setTitle(title);
+                    task.setDescription(description);
+                    task.setPriority(priority);
+                    task.setTimeType(selectedTimeType);
+                    task.setTargetHour(selectedTargetHour);
+                    task.setTargetMinute(selectedTargetMinute);
+                    task.setEndHour(selectedEndHour);
+                    task.setEndMinute(selectedEndMinute);
+
+                    db.collection("tasks").document(userId)
+                            .collection("userTasks").document(task.getId())
+                            .set(task)
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getActivity(), "Задача обновлена", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(getActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("Отмена", null);
+
+        builder.create().show();
     }
 }
