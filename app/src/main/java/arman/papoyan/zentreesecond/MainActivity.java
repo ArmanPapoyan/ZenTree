@@ -1,6 +1,10 @@
 package arman.papoyan.zentreesecond;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.view.View;
 
@@ -16,53 +20,78 @@ import com.google.firebase.auth.FirebaseUser;
 import arman.papoyan.zentreesecond.fragments.FocusFragment;
 import arman.papoyan.zentreesecond.fragments.HomeFragment;
 import arman.papoyan.zentreesecond.fragments.LoginFragment;
+import arman.papoyan.zentreesecond.fragments.NoInternetFragment;
 import arman.papoyan.zentreesecond.fragments.ProfileFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
+import arman.papoyan.zentreesecond.utils.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
 
     public BottomNavigationView bottomNav;
     private Fragment currentFragment;
     private int currentNavItemId = R.id.nav_home;
+    private NetworkCallback networkCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SharedPreferences themePrefs = getSharedPreferences("theme_prefs", MODE_PRIVATE);
-        int nightMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        AppCompatDelegate.setDefaultNightMode(nightMode);
+            SharedPreferences themePrefs = getSharedPreferences("theme_prefs", MODE_PRIVATE);
+            int nightMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+            AppCompatDelegate.setDefaultNightMode(nightMode);
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        bottomNav = findViewById(R.id.bottom_navigation);
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
-        boolean isGuest = prefs.getBoolean("is_guest", false);
-
-        if (savedInstanceState == null) {
-            if (isGuest || currentUser != null) {
-                bottomNav.setVisibility(View.VISIBLE);
-                currentFragment = new HomeFragment();
-                loadFragment(currentFragment, false);
-                setupNavigation();
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main);
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            networkCallback = new NetworkCallback(this);
+            cm.registerDefaultNetworkCallback(networkCallback);
+            bottomNav = findViewById(R.id.bottom_navigation);
+            if(NetworkUtils.isInternetAvailable(this)) {
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
+                boolean isGuest = prefs.getBoolean("is_guest", false);
 
                 if (savedInstanceState == null) {
-                    int savedNavId = getIntent().getIntExtra("selected_nav_id", 0);
-                    if (savedNavId != 0) {
-                        currentNavItemId = savedNavId;
-                        bottomNav.setSelectedItemId(currentNavItemId);
+                    if (isGuest || currentUser != null) {
+                        bottomNav.setVisibility(View.VISIBLE);
+                        currentFragment = new HomeFragment();
+                        loadFragment(currentFragment, false);
+                        setupNavigation();
+
+                        if (savedInstanceState == null) {
+                            int savedNavId = getIntent().getIntExtra("selected_nav_id", 0);
+                            if (savedNavId != 0) {
+                                currentNavItemId = savedNavId;
+                                bottomNav.setSelectedItemId(currentNavItemId);
+                            }
+                        }
+                    } else {
+                        bottomNav.setVisibility(View.GONE);
+                        currentFragment = new LoginFragment();
+                        loadFragment(currentFragment, false);
                     }
                 }
-            } else {
+                else {
+                    bottomNav.setVisibility(View.VISIBLE);
+                    setupNavigation();
+                    bottomNav.setSelectedItemId(currentNavItemId);
+                }
+            }
+            else{
                 bottomNav.setVisibility(View.GONE);
-                currentFragment = new LoginFragment();
+                currentFragment = new NoInternetFragment();
                 loadFragment(currentFragment, false);
             }
+    }
+    @Override
+    protected void onDestroy() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        cm.unregisterNetworkCallback(networkCallback);
+    }
+    public void retryConnection() {
+        if (NetworkUtils.isInternetAvailable(this)) {
+            recreate();
         }
     }
-
     public void disableAllFirestoreListeners() {
         Fragment tasksFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (tasksFragment instanceof TasksFragment) {
@@ -134,5 +163,57 @@ public class MainActivity extends AppCompatActivity {
     public int getCurrentNavItemId() {
         return currentNavItemId;
     }
+    public void showNoInternetFragment() {
+        bottomNav.setVisibility(View.GONE);
+        currentFragment = new NoInternetFragment();
+        loadFragment(currentFragment, false);
+    }
+    public void showMainContent() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
+        boolean isGuest = prefs.getBoolean("is_guest", false);
 
+        if (isGuest || currentUser != null) {
+            bottomNav.setVisibility(View.VISIBLE);
+            currentFragment = new HomeFragment();
+            loadFragment(currentFragment, false);
+            setupNavigation();
+        } else {
+            bottomNav.setVisibility(View.GONE);
+            currentFragment = new LoginFragment();
+            loadFragment(currentFragment, false);
+        }
+    }
+
+    public class NetworkCallback extends ConnectivityManager.NetworkCallback {
+        private MainActivity activity;
+
+        public NetworkCallback(MainActivity activity) {
+            this.activity = activity;
+        }
+
+        @Override
+        public void onLost(Network network) {
+            activity.runOnUiThread(() -> activity.showNoInternetFragment());
+        }
+
+        @Override
+        public void onAvailable(Network network) {
+            // Ничего не делаем, ждём onCapabilitiesChanged
+        }
+
+        @Override
+        public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
+            boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            boolean isValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+
+            activity.runOnUiThread(() -> {
+                if (hasInternet && isValidated) {
+                    activity.showMainContent();
+                } else {
+                    activity.showNoInternetFragment();
+                }
+            });
+        }
+    }
 }
