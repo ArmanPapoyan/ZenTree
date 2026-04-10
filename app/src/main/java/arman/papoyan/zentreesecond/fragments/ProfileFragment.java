@@ -2,22 +2,32 @@ package arman.papoyan.zentreesecond.fragments;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import android.content.Context;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
@@ -31,19 +41,20 @@ public class ProfileFragment extends Fragment {
     private boolean isGuest;
     private SwitchCompat switchTheme;
     private SharedPreferences themePrefs;
+    private Button deleteButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         switchTheme = view.findViewById(R.id.switch_theme);
-        themePrefs = requireActivity().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE);
+        themePrefs = requireActivity().getSharedPreferences("theme_prefs", MODE_PRIVATE);
         textViewName = view.findViewById(R.id.text_view_name);
         textViewEmail = view.findViewById(R.id.text_view_email);
         Button out = view.findViewById(R.id.button_logout);
         int savedMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         switchTheme.setChecked(savedMode == AppCompatDelegate.MODE_NIGHT_YES);
-
+        deleteButton = view.findViewById(R.id.button_delete);
         prefs = getActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
         isGuest = prefs.getBoolean("is_guest", false);
         mAuth = FirebaseAuth.getInstance();
@@ -66,9 +77,112 @@ public class ProfileFragment extends Fragment {
             startActivity(intent);
         });
 
+        deleteButton.setOnClickListener(v -> {
+            showPasswordDialog();
+        });
+
         return view;
     }
+    private void showPasswordDialog() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
 
+        String email = user.getEmail();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        EditText passwordInput = new EditText(getActivity());
+        passwordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordInput.setHint("Введите пароль");
+        passwordInput.setPadding(40, 20, 40, 20);
+
+        builder.setTitle("Введите пароль")
+                .setMessage(R.string.password_text)
+                .setView(passwordInput)
+                .setPositiveButton("Подтвердить", (dialog, which) -> {
+                    String password = passwordInput.getText().toString();
+                    if (password.isEmpty()) {
+                        Toast.makeText(getActivity(), "Введите пароль", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    reauthenticateUser(email, password);
+                })
+                .setNegativeButton("Отмена", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false);
+
+        builder.show();
+    }
+    private void reauthenticateUser(String email, String password) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        AuthCredential credential = EmailAuthProvider.getCredential(email, password);
+
+        user.reauthenticate(credential)
+                .addOnSuccessListener(aVoid -> {
+                    showDeleteDialog();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getActivity(), "Неверный пароль: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+    private void showDeleteDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Удалить аккаунт?")
+                .setMessage(R.string.delete_text)
+                .setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if (user == null) {
+                            return;
+                        }
+                        String userId = user.getUid();
+                        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+                        progressDialog.setMessage("Удаление аккаунта...");
+                        progressDialog.setCancelable(false);
+                        progressDialog.show();
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                        db.collection("tasks").document(userId).collection("userTasks")
+                                .get()
+                                .addOnSuccessListener(queryDocumentSnapshots -> {
+                                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                                        document.getReference().delete();
+                                    }
+                                    db.collection("users").document(userId).collection("tree").document("progress")
+                                            .delete()
+                                            .addOnSuccessListener(aVoid -> {
+                                                user.delete()
+                                                        .addOnSuccessListener(aVoid2 -> {
+                                                            prefs.edit().clear().apply();
+                                                            FirebaseAuth.getInstance().signOut();
+                                                            progressDialog.dismiss();
+                                                            goToLoginFragment();
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            progressDialog.dismiss();
+                                                            Toast.makeText(getActivity(), "Ошибка удаления аккаунта: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                                        });
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                progressDialog.dismiss();
+                                                Toast.makeText(getActivity(), "Ошибка удаления дерева: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                            });
+                                })
+                                .addOnFailureListener(e -> {
+                                    progressDialog.dismiss();
+                                    Toast.makeText(getActivity(), "Не удалось получить задачи: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                });
+                    }
+                })
+                .setNegativeButton("Отмена", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED);
+    }
     private void displayUserInfo(FirebaseUser user) {
         if (user != null && !user.isAnonymous()) {
             textViewEmail.setText(user.getEmail());
