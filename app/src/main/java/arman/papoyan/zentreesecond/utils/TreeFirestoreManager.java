@@ -71,7 +71,9 @@ public class TreeFirestoreManager {
                         TreeData data = documentSnapshot.toObject(TreeData.class);
                         if (data != null) {
                             TreeModel tree = new TreeModel();
-                            tree.addMinutes(data.totalMinutes);
+                            int defaultX = 60;
+                            float defaultMotivation = 1.0f;
+                            tree.addMinutes(data.totalMinutes, defaultX, defaultMotivation);
                             callback.onSuccess(tree);
                         } else {
                             callback.onSuccess(new TreeModel());

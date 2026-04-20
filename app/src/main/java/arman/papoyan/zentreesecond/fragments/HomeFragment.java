@@ -1,6 +1,9 @@
 package arman.papoyan.zentreesecond.fragments;
 
 import android.app.AlertDialog;
+import android.app.AppOpsManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -21,16 +24,29 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.model.TreeModel;
 import arman.papoyan.zentreesecond.utils.ScreenStateReceiver;
 import arman.papoyan.zentreesecond.utils.TreeManager;
+import arman.papoyan.zentreesecond.workers.StartFocusWorker;
 
 public class HomeFragment extends Fragment implements ScreenStateReceiver.ScreenStateListener {
     private SharedPreferences dayPrefs;
@@ -41,7 +57,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private TextView motivationText;
     private TextView growthStatusText;
     private ProgressBar treeProgressBar;
-    private Button startFocusButton;
     private Button test;
     private TextView textViewTime;
     private TextView textViewProgress;
@@ -67,7 +82,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         treeLevelText = view.findViewById(R.id.tree_level_text);
         motivationText = view.findViewById(R.id.motivation_text);
         treeProgressBar = view.findViewById(R.id.tree_progress_bar);
-        startFocusButton = view.findViewById(R.id.btn_start_focus);
         growthStatusText = view.findViewById(R.id.growth_status_text);
         textViewTime = view.findViewById(R.id.text_view_time);
         textViewProgress = view.findViewById(R.id.text_view_progress);
@@ -76,6 +90,8 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         treeManager = new TreeManager(requireActivity());
         tree = treeManager.loadTree();
 
+        loadUserDataFromFirestore();
+        isFocusModeActive = true;
         dayPrefs = getActivity().getSharedPreferences("day_check", Context.MODE_PRIVATE);
         String lastOpenDate = dayPrefs.getString("last_open_date", "");
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -102,67 +118,133 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         drawable.setStroke(4, Color.parseColor("#C8E6C9"));
         treeContainer.setBackground(drawable);
 
-        startFocusButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toggleFocusMode();
-            }
-        });
-
-        updateUIFromState();
 
         int currentStage = tree.getCurrentStage();
         updateTreeImage(currentStage);
         updateTreeUI();
         test.setOnClickListener(v -> {
-            tree.addMinutes(30);
+            SharedPreferences prefs = requireActivity().getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
+            int x = prefs.getInt("x", 60);
+            float motivation = prefs.getFloat("motivation", 1.0f);
+            tree.addMinutes(30, x, motivation);
             updateTreeUI();
-            Toast.makeText(getActivity(),"Фокус-режим включен! Выключи экран, чтобы дерево росло.", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Тест: +30 минут к росту", Toast.LENGTH_LONG).show();
         });
         return view;
     }
+    private int getCurrentScreenTime() {
+        UsageStatsManager usageStatsManager = (UsageStatsManager) requireActivity().getSystemService(Context.USAGE_STATS_SERVICE);
+        long endTime = System.currentTimeMillis();
+        long startTime = endTime - 24 * 60 * 60 * 1000; // последние 24 часа
 
-    private void toggleFocusMode() {
-        if (!isFocusModeActive) {
-            startFocusMode();
-        } else {
-            stopFocusMode();
+        Map<String, UsageStats> stats = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime);
+        long totalTime = 0;
+
+        for (UsageStats usageStats : stats.values()) {
+            totalTime += usageStats.getTotalTimeInForeground();
         }
-    }
 
-    private void startFocusMode() {
-        isFocusModeActive = true;
-        updateUIFromState();
-        Log.d(TAG, "Фокус-режим ВКЛЮЧЕН");
-        Toast.makeText(getActivity(),
-                "Фокус-режим включен! Выключи экран, чтобы дерево росло.",
-                Toast.LENGTH_LONG).show();
+        return (int) (totalTime / (60 * 60 * 1000)); // конвертируем в часы
     }
-
-    private void stopFocusMode() {
-        isFocusModeActive = false;
-        tree.stopGrowth();
-        treeManager.saveTree(tree);
-        stopGrowthUpdates();
-        updateUIFromState();
-        Log.d(TAG, "Фокус-режим ВЫКЛЮЧЕН");
-        Toast.makeText(getActivity(),
-                "Фокус-режим выключен.",
-                Toast.LENGTH_SHORT).show();
+    private boolean hasUsageStatsPermission() {
+        AppOpsManager appOps = (AppOpsManager) requireActivity().getSystemService(Context.APP_OPS_SERVICE);
+        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), requireActivity().getPackageName());
+        return mode == AppOpsManager.MODE_ALLOWED;
     }
+    private void requestUsageStatsPermission() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Разрешение на отслеживание экранного времени")
+                .setMessage("Для работы мотивационного коэффициента приложению нужен доступ к статистике использования. Вы можете включить его в настройках.")
+                .setPositiveButton("Открыть настройки", (dialog, which) -> {
+                    startActivity(new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS));
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+    private void loadUserDataFromFirestore() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
 
-    private void updateUIFromState() {
-        if (isFocusModeActive) {
-            startFocusButton.setText("Остановить рост");
-            growthStatusText.setText("✅ Фокус-режим включён");
-            growthStatusText.setTextColor(Color.parseColor("@color/primary_green"));
-        } else {
-            startFocusButton.setText("Начать фокус-сессию");
-            growthStatusText.setText("💤 Фокус-режим выключен");
-            growthStatusText.setTextColor(Color.DKGRAY);
+        String userId = user.getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String wakeUpTime = documentSnapshot.getString("wakeUpTime");
+                        Long screenTimeGoal = documentSnapshot.getLong("screenTimeGoal");
+
+                        if (wakeUpTime != null && screenTimeGoal != null) {
+                            saveUserDataToPrefs(wakeUpTime, screenTimeGoal);
+                            calculateGrowthParameters(wakeUpTime, screenTimeGoal);
+                            scheduleFocusAtWakeUpTime(wakeUpTime);
+                        } else {
+                            Log.e(TAG, "Данные не найдены: wakeUpTime или screenTimeGoal = null");
+                        }
+                    } else {
+                        Log.e(TAG, "Документ пользователя не существует");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Ошибка загрузки данных: " + e.getMessage());
+                });
+    }
+    private void saveUserDataToPrefs(String wakeUpTime, long screenTimeGoal) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        prefs.edit()
+                .putString("wakeUpTime", wakeUpTime)
+                .putLong("screenTimeGoal", screenTimeGoal)
+                .apply();
+
+        Log.d(TAG, "Данные сохранены: wakeUpTime=" + wakeUpTime + ", goal=" + screenTimeGoal);
+    }
+    private void scheduleFocusAtWakeUpTime(String wakeUpTime) {
+        String[] parts = wakeUpTime.split(":");
+        int hour = Integer.parseInt(parts[0]);
+        int minute = Integer.parseInt(parts[1]);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+
+        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
-    }
 
+        long delay = calendar.getTimeInMillis() - System.currentTimeMillis();
+
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(StartFocusWorker.class)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .build();
+
+        WorkManager.getInstance(requireContext()).enqueue(workRequest);
+    }
+    private void calculateGrowthParameters(String wakeUpTime, long screenTimeGoal) {
+        String[] parts = wakeUpTime.split(":");
+        int wakeUpHour = Integer.parseInt(parts[0]);
+
+        int hoursLeft = 24 - wakeUpHour;
+
+        int totalMinutesLeft = hoursLeft * 60;
+        int x = totalMinutesLeft / 15;
+
+        int currentScreenTime = getCurrentScreenTime();
+
+
+        double motivation = 1 + (double)(currentScreenTime - screenTimeGoal) / screenTimeGoal;
+        if (motivation < 0.5) motivation = 0.5;
+        if (motivation > 3.0) motivation = 3.0;
+
+        SharedPreferences prefs = requireActivity().getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
+        prefs.edit()
+                .putInt("x", x)
+                .putFloat("motivation", (float) motivation)
+                .putInt("wakeUpHour", wakeUpHour)
+                .apply();
+
+        Log.d(TAG, "x = " + x + " мин, мотивация = " + motivation);
+    }
     @Override
     public void onScreenOff() {
         Log.d(TAG, "Экран ВЫКЛЮЧЕН");
@@ -170,14 +252,10 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             screenOffTime = System.currentTimeMillis();
             tree.startGrowth();
             growthStatusText.setText("🌱 Дерево растёт (экран выключен)");
-            growthStatusText.setTextColor(Color.parseColor("@color/primary_green"));
+            growthStatusText.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_green));
             startGrowthUpdates();
-            Toast.makeText(getActivity(),
-                    "Экран выключен - дерево начинает расти!",
-                    Toast.LENGTH_SHORT).show();
         }
     }
-
     @Override
     public void onScreenOn() {
         Log.d(TAG, "Экран ВКЛЮЧЕН");
@@ -188,12 +266,8 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             growthStatusText.setText("⏸️ Рост на паузе (экран включён)");
             growthStatusText.setTextColor(Color.parseColor("#FF9800"));
             stopGrowthUpdates();
-            Toast.makeText(getActivity(),
-                    "Экран включен - рост остановлен",
-                    Toast.LENGTH_SHORT).show();
         }
     }
-
     private void startGrowthUpdates() {
         stopGrowthUpdates();
         growthUpdateRunnable = new Runnable() {
@@ -204,16 +278,35 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
                     long growthDuration = currentTime - screenOffTime;
                     int secondsPassed = (int) (growthDuration / 1000);
                     if (secondsPassed >= 10) {
-                        int experienceToAdd = secondsPassed / 10;
-                        if (experienceToAdd > 0) {
-                            tree.addMinutes(experienceToAdd);
+                        int minutesToAdd = secondsPassed / 10;
+
+                        if (minutesToAdd > 0) {
+                            SharedPreferences prefs = requireActivity().getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
+                            int x = prefs.getInt("x", 60);
+                            float motivation = prefs.getFloat("motivation", 1.0f);
+                            int currentStage = tree.getCurrentStage();
+
+                            if (currentStage < 6) {
+                                int neededForNext = (int) (x * motivation * currentStage);
+                                int currentProgress = tree.getProgressPercentage();
+                                int minutesForCurrentStage = (currentProgress * neededForNext) / 100;
+                                int remainingForNext = neededForNext - minutesForCurrentStage;
+
+                                if (minutesToAdd > remainingForNext) {
+                                    minutesToAdd = remainingForNext;
+                                }
+                            }
+
+                            tree.addMinutes(minutesToAdd,x,motivation);
                             treeManager.saveTree(tree);
                             updateTreeUI();
                             screenOffTime = currentTime;
-                            Log.d(TAG, "Добавлено опыта: " + experienceToAdd);
+                            Log.d(TAG, "Добавлено минут: " + minutesToAdd);
                         }
+                        growthHandler.postDelayed(this, 5000);
+                    } else {
+                        growthHandler.postDelayed(this, 1000);
                     }
-                    growthHandler.postDelayed(this, 5000);
                 }
             }
         };

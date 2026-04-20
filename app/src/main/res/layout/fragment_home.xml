@@ -141,24 +141,10 @@
         android:textColor="#616161"
         android:gravity="center"
         android:maxLines="2"
-        app:layout_constraintBottom_toTopOf="@id/btn_start_focus"
+        app:layout_constraintBottom_toTopOf="@id/text_view_time"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="24dp"/>
-
-    <Button
-        android:id="@+id/btn_start_focus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Начать фокус-сессию"
-        android:backgroundTint="@color/primary_green"
-        android:textColor="@color/white"
-        android:padding="16dp"
-        app:cornerRadius="50dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="32dp"/>
     <TextView
         android:id="@+id/text_view_time"
         android:layout_width="wrap_content"

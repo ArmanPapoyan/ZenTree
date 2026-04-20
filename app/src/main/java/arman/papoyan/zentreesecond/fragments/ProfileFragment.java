@@ -19,7 +19,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.firebase.auth.AuthCredential;
@@ -39,49 +38,59 @@ public class ProfileFragment extends Fragment {
     private TextView textViewEmail;
     private SharedPreferences prefs;
     private boolean isGuest;
-    private SwitchCompat switchTheme;
     private SharedPreferences themePrefs;
     private Button deleteButton;
+    private Button btnThemeSystem, btnThemeLight, btnThemeDark;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        switchTheme = view.findViewById(R.id.switch_theme);
         themePrefs = requireActivity().getSharedPreferences("theme_prefs", MODE_PRIVATE);
         textViewName = view.findViewById(R.id.text_view_name);
         textViewEmail = view.findViewById(R.id.text_view_email);
         Button out = view.findViewById(R.id.button_logout);
-        int savedMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        switchTheme.setChecked(savedMode == AppCompatDelegate.MODE_NIGHT_YES);
         deleteButton = view.findViewById(R.id.button_delete);
         prefs = getActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
         isGuest = prefs.getBoolean("is_guest", false);
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
+        btnThemeSystem = view.findViewById(R.id.btn_theme_system);
+        btnThemeLight = view.findViewById(R.id.btn_theme_light);
+        btnThemeDark = view.findViewById(R.id.btn_theme_dark);
+
 
         displayUserInfo(user);
 
+        if (isGuest || (user != null && user.isAnonymous())) {
+            deleteButton.setVisibility(View.GONE);
+        } else {
+            deleteButton.setVisibility(View.VISIBLE);
+        }
         out.setOnClickListener(v -> logout());
-        switchTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            int mode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
-            themePrefs.edit().putInt("night_mode", mode).apply();
-            AppCompatDelegate.setDefaultNightMode(mode);
-            int currentNavId = 0;
-            if (getActivity() instanceof MainActivity) {
-                currentNavId = ((MainActivity) getActivity()).getCurrentNavItemId();
-            }
-            Intent intent = requireActivity().getIntent();
-            intent.putExtra("selected_nav_id", currentNavId);
-            requireActivity().finish();
-            startActivity(intent);
-        });
+
+
+        btnThemeSystem.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM));
+        btnThemeLight.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_NO));
+        btnThemeDark.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_YES));
 
         deleteButton.setOnClickListener(v -> {
             showPasswordDialog();
         });
-
         return view;
+    }
+    private void setThemeMode(int mode) {
+        themePrefs.edit().putInt("night_mode", mode).apply();
+        AppCompatDelegate.setDefaultNightMode(mode);
+
+        int currentNavId = 0;
+        if (getActivity() instanceof MainActivity) {
+            currentNavId = ((MainActivity) getActivity()).getCurrentNavItemId();
+        }
+        Intent intent = requireActivity().getIntent();
+        intent.putExtra("selected_nav_id", currentNavId);
+        requireActivity().finish();
+        startActivity(intent);
     }
     private void showPasswordDialog() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();

@@ -51,7 +51,9 @@ public class TreeManager {
         }
         int savedMinutes = prefs.getInt(KEY_TOTAL_MINUTES, 0);
         if (savedMinutes > 0) {
-            currentTree.addMinutes(savedMinutes);
+            int defaultX = 60;
+            float defaultMotivation = 1.0f;
+            currentTree.addMinutes(savedMinutes, defaultX, defaultMotivation);
         }
         if (!isGuest) {
             firestoreManager.loadTree(new TreeFirestoreManager.TreeLoadCallback() {

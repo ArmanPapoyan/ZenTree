@@ -124,6 +124,53 @@
                 android:layout_height="wrap_content"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Время пробуждения"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <EditText
+                android:id="@+id/edit_text_wake_up_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Выбрать время"
+                android:focusable="false"
+                android:cursorVisible="false"
+                android:clickable="true"/>
+
+            <Button
+                android:id="@+id/button_select_wake_up_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Выбрать"
+                style="@style/Widget.Material3.Button.TextButton"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Цель по экранному времени (часы)"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"/>
+
+            <EditText
+                android:id="@+id/edit_text_screen_time_goal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Например: 6"
+                android:inputType="number"
+                android:digits="0123456789"
+                android:maxLength="2"/>
+        </LinearLayout>
     </LinearLayout>
 
     <Button

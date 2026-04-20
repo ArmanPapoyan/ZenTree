@@ -6,6 +6,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import arman.papoyan.zentreesecond.fragments.HomeFragment;
 import arman.papoyan.zentreesecond.fragments.LoginFragment;
 import arman.papoyan.zentreesecond.fragments.NoInternetFragment;
 import arman.papoyan.zentreesecond.fragments.ProfileFragment;
+import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
 import arman.papoyan.zentreesecond.utils.NetworkUtils;
@@ -35,28 +37,40 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-            SharedPreferences themePrefs = getSharedPreferences("theme_prefs", MODE_PRIVATE);
-            int nightMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-            AppCompatDelegate.setDefaultNightMode(nightMode);
+        SharedPreferences themePrefs = getSharedPreferences("theme_prefs", MODE_PRIVATE);
+        int nightMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        AppCompatDelegate.setDefaultNightMode(nightMode);
 
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_main);
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            networkCallback = new NetworkCallback(this);
-            cm.registerDefaultNetworkCallback(networkCallback);
-            bottomNav = findViewById(R.id.bottom_navigation);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        networkCallback = new NetworkCallback(this);
+        cm.registerDefaultNetworkCallback(networkCallback);
+        bottomNav = findViewById(R.id.bottom_navigation);
+
+        SharedPreferences regPrefs = getSharedPreferences("registration_prefs", MODE_PRIVATE);
+        boolean isRegistering = regPrefs.getBoolean("is_registering", false);
+        Log.d("MainActivity", "isRegistering = " + isRegistering);
+
+        if (isRegistering) {
+            bottomNav.setVisibility(View.GONE);
+            currentFragment = new RegistrationFragment();
+            loadFragment(currentFragment, false);
+            return;
+        }
+
         if (NetworkUtils.isInternetAvailable(this)) {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            Log.d("MainActivity", "currentUser = " + (currentUser != null ? currentUser.getUid() : "null"));
             SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
             boolean isGuest = prefs.getBoolean("is_guest", false);
 
             if (isGuest || currentUser != null) {
                 bottomNav.setVisibility(View.VISIBLE);
-
                 Fragment fragment = getFragmentForNavItem(currentNavItemId);
                 currentFragment = fragment;
                 loadFragment(fragment, false);
-
                 setupNavigation();
                 bottomNav.setSelectedItemId(currentNavItemId);
             } else {
@@ -69,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
             currentFragment = new NoInternetFragment();
             loadFragment(currentFragment, false);
         }
-
     }
     @Override
     protected void onDestroy() {
@@ -162,11 +175,20 @@ public class MainActivity extends AppCompatActivity {
         return currentNavItemId;
     }
     public void showNoInternetFragment() {
+        if (currentFragment instanceof NoInternetFragment) {
+            return;
+        }
+
         bottomNav.setVisibility(View.GONE);
         currentFragment = new NoInternetFragment();
         loadFragment(currentFragment, false);
     }
+
     public void showMainContent() {
+        if (!(currentFragment instanceof NoInternetFragment)) {
+            return;
+        }
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
         boolean isGuest = prefs.getBoolean("is_guest", false);

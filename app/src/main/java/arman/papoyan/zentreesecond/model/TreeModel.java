@@ -2,53 +2,39 @@ package arman.papoyan.zentreesecond.model;
 
 public class TreeModel {
     private int level = 1;
-    private int totalMinutes = 0;
+    private int totalMinutes = 0;           // общее количество минут (для совместимости)
     private int currentStage = 1;
+    private int progressInCurrentStage = 0; // прогресс в текущей стадии (0-100)
     private long growthStartTime = 0;
     private boolean isGrowing = false;
     private String userId;
     private String lastUpdateDate = "";
 
-    public int getLevel() {
-        return level;
-    }
+    public int getLevel() { return level; }
+    public int getTotalMinutes() { return totalMinutes; }
+    public int getCurrentStage() { return currentStage; }
+    public int getProgressPercentage() { return progressInCurrentStage; }
+    public boolean isGrowing() { return isGrowing; }
+    public String getLastUpdateDate() { return lastUpdateDate; }
+    public void setLastUpdateDate(String date) { this.lastUpdateDate = date; }
 
-    public int getTotalMinutes() {
-        return totalMinutes;
-    }
+    public void addMinutes(int minutes, int x, float motivation) {
+        int currentStageForCalc = Math.min(currentStage, 5);
+        int neededForCurrentStage = (int) (x * motivation * currentStageForCalc);
 
-    public int getCurrentStage() {
-        return currentStage;
-    }
+        float percentPerMinute = 100f / neededForCurrentStage;
+        int percentToAdd = (int) (minutes * percentPerMinute);
 
-    public boolean isGrowing() {
-        return isGrowing;
-    }
+        progressInCurrentStage += percentToAdd;
+        totalMinutes += minutes;
 
-    public String getLastUpdateDate() {
-        return lastUpdateDate;
-    }
-
-    public void setLastUpdateDate(String date) {
-        this.lastUpdateDate = date;
-    }
-
-    public void addMinutes(int minutes) {
-        this.totalMinutes += minutes;
-
-        int newLevel = totalMinutes / 60;
-        if (newLevel > level) {
-            level = newLevel;
+        if (progressInCurrentStage >= 100) {
+            progressInCurrentStage = 0;
+            currentStage++;
+            if (currentStage > 6) currentStage = 6;
         }
-        int newStage = Math.min(level, 6);
-        if (newStage > currentStage) {
-            currentStage = newStage;
-        }
-    }
 
-    public int getProgressPercentage() {
-        int minutesInCurrentHour = totalMinutes % 60;
-        return (minutesInCurrentHour * 100) / 60;
+        level = currentStage;
     }
 
     public void startGrowth() {
@@ -60,16 +46,14 @@ public class TreeModel {
         if (isGrowing) {
             isGrowing = false;
             long growthDuration = System.currentTimeMillis() - growthStartTime;
-            int minutesEarned = (int) (growthDuration / 60000);
-            if (minutesEarned > 0) {
-                addMinutes(minutesEarned);
-            }
         }
     }
+
     public void resetToDefault(String today) {
         this.level = 1;
         this.totalMinutes = 0;
         this.currentStage = 1;
+        this.progressInCurrentStage = 0;
         this.lastUpdateDate = today;
     }
 }
