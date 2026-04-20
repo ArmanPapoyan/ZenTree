@@ -1,13 +1,18 @@
 package arman.papoyan.zentreesecond;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -34,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private Fragment currentFragment;
     private int currentNavItemId = R.id.nav_home;
     private NetworkCallback networkCallback;
+    private static final int OVERLAY_PERMISSION_REQUEST = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        checkOverlayPermission();
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         networkCallback = new NetworkCallback(this);
@@ -90,9 +97,29 @@ public class MainActivity extends AppCompatActivity {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(networkCallback);
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == OVERLAY_PERMISSION_REQUEST) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.canDrawOverlays(this)) {
+                    Toast.makeText(this, "Без этого разрешения блокировка экрана не будет работать", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
     public void retryConnection() {
         if (NetworkUtils.isInternetAvailable(this)) {
             recreate();
+        }
+    }
+    private void checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST);
+            }
         }
     }
     private Fragment getFragmentForNavItem(int navItemId) {
@@ -219,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onAvailable(Network network) {
-            // Ничего не делаем, ждём onCapabilitiesChanged
+
         }
 
         @Override

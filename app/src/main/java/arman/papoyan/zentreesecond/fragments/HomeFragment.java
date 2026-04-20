@@ -135,7 +135,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private int getCurrentScreenTime() {
         UsageStatsManager usageStatsManager = (UsageStatsManager) requireActivity().getSystemService(Context.USAGE_STATS_SERVICE);
         long endTime = System.currentTimeMillis();
-        long startTime = endTime - 24 * 60 * 60 * 1000; // последние 24 часа
+        long startTime = endTime - 24 * 60 * 60 * 1000;
 
         Map<String, UsageStats> stats = usageStatsManager.queryAndAggregateUsageStats(startTime, endTime);
         long totalTime = 0;
@@ -144,7 +144,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             totalTime += usageStats.getTotalTimeInForeground();
         }
 
-        return (int) (totalTime / (60 * 60 * 1000)); // конвертируем в часы
+        return (int) (totalTime / (60 * 60 * 1000));
     }
     private boolean hasUsageStatsPermission() {
         AppOpsManager appOps = (AppOpsManager) requireActivity().getSystemService(Context.APP_OPS_SERVICE);

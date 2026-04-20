@@ -2,9 +2,9 @@ package arman.papoyan.zentreesecond.model;
 
 public class TreeModel {
     private int level = 1;
-    private int totalMinutes = 0;           // общее количество минут (для совместимости)
+    private int totalMinutes = 0;
     private int currentStage = 1;
-    private int progressInCurrentStage = 0; // прогресс в текущей стадии (0-100)
+    private int progressInCurrentStage = 0;
     private long growthStartTime = 0;
     private boolean isGrowing = false;
     private String userId;
@@ -36,7 +36,18 @@ public class TreeModel {
 
         level = currentStage;
     }
+    public void addBonusMinutes(int minutes) {
+        this.totalMinutes += minutes;
 
+        int newLevel = totalMinutes / 60;
+        if (newLevel > level) {
+            level = newLevel;
+        }
+        int newStage = Math.min(level, 6);
+        if (newStage > currentStage) {
+            currentStage = newStage;
+        }
+    }
     public void startGrowth() {
         isGrowing = true;
         growthStartTime = System.currentTimeMillis();
