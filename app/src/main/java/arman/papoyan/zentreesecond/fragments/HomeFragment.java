@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.models.TreeModel;
+import arman.papoyan.zentreesecond.services.TrackerForegroundService;
 import arman.papoyan.zentreesecond.utils.NotificationHelper;
 import arman.papoyan.zentreesecond.utils.ScreenStateReceiver;
 import arman.papoyan.zentreesecond.utils.TreeManager;
@@ -113,7 +114,9 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             saveContinuousMinutes();
             saveNotificationSent(false);
         }
-
+        if (!hasUsageStatsPermission()) {
+            requestUsageStatsPermission();
+        }
         growthHandler = new Handler();
 
         screenReceiver = new ScreenStateReceiver(this);
@@ -126,6 +129,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         screenOnStartTime = System.currentTimeMillis();
         startContinuousCheck();
         startWorkManager();
+        startTrackerService();
 
         GradientDrawable drawable = new GradientDrawable();
         drawable.setShape(GradientDrawable.OVAL);
@@ -305,6 +309,10 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             notificationPrefs.edit().putLong("last_notification_time", now).apply();
             saveNotificationSent(false);
         }
+        if (!hasUsageStatsPermission()) {
+            Log.d("TrackerService", "Нет разрешения PACKAGE_USAGE_STATS");
+            return;
+        }
     }
 
     private void startGrowthUpdates() {
@@ -429,5 +437,9 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
                 UsageTrackerWorker.class,
                 15, TimeUnit.MINUTES).build();
         WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork("usage_tracker", ExistingPeriodicWorkPolicy.KEEP, workRequest);
+    }
+    private void startTrackerService() {
+        Intent intent = new Intent(requireContext(), TrackerForegroundService.class);
+        requireContext().startService(intent);
     }
 }

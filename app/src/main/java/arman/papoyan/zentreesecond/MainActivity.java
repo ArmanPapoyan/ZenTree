@@ -33,6 +33,7 @@ import arman.papoyan.zentreesecond.fragments.ProfileFragment;
 import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
+import arman.papoyan.zentreesecond.services.TrackerForegroundService;
 import arman.papoyan.zentreesecond.utils.NetworkUtils;
 
 public class MainActivity extends AppCompatActivity {
@@ -114,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(networkCallback);
+        Intent intent = new Intent(this, TrackerForegroundService.class);
+        stopService(intent);
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

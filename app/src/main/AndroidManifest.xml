@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -29,7 +31,7 @@
 
         <service android:name=".services.FocusForegroundService" android:foregroundServiceType="dataSync" />
         <service android:name=".workers.StartFocusWorker" />
-
+        <service android:name=".services.TrackerForegroundService" android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>
