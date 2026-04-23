@@ -1,7 +1,9 @@
 package arman.papoyan.zentreesecond;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -43,6 +45,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d("TestReceiver", "Экран: " + intent.getAction());
+            }
+        }, filter);
+
         SharedPreferences themePrefs = getSharedPreferences("theme_prefs", MODE_PRIVATE);
         int nightMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(nightMode);
@@ -50,7 +62,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkOverlayPermission();
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+        }
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         networkCallback = new NetworkCallback(this);
         cm.registerDefaultNetworkCallback(networkCallback);
@@ -79,6 +93,10 @@ public class MainActivity extends AppCompatActivity {
                 currentFragment = fragment;
                 loadFragment(fragment, false);
                 setupNavigation();
+                if (getIntent().getBooleanExtra("open_focus_tab", false)) {
+                    bottomNav.setSelectedItemId(R.id.nav_focus);
+                    getIntent().removeExtra("open_focus_tab");
+                }
                 bottomNav.setSelectedItemId(currentNavItemId);
             } else {
                 bottomNav.setVisibility(View.GONE);

@@ -20,7 +20,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
-import arman.papoyan.zentreesecond.model.TreeModel;
+import arman.papoyan.zentreesecond.models.TreeModel;
 import arman.papoyan.zentreesecond.utils.TreeFirestoreManager;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 

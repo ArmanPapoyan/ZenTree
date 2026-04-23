@@ -6,7 +6,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import arman.papoyan.zentreesecond.model.TreeModel;
+import arman.papoyan.zentreesecond.models.TreeModel;
 
 public class TreeFirestoreManager {
     private static final String TAG = "TreeFirestore";

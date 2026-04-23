@@ -21,6 +21,7 @@ public class ScreenStateReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
         String action = intent.getAction();
         if (action == null) {
             return;
@@ -39,5 +40,6 @@ public class ScreenStateReceiver extends BroadcastReceiver {
                 }
                 break;
         }
+        Log.d("ScreenStateReceiver", "onReceive вызван, action = " + action);
     }
 }

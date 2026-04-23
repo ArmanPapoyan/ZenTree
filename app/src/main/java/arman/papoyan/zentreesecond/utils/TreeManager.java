@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import arman.papoyan.zentreesecond.model.TreeModel;
+import arman.papoyan.zentreesecond.models.TreeModel;
 
 public class TreeManager {
     private static final String PREFS_NAME = "ZenTreePrefs";

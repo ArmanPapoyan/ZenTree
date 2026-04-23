@@ -13,7 +13,7 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
 import arman.papoyan.zentreesecond.R;
-import arman.papoyan.zentreesecond.model.TreeModel;
+import arman.papoyan.zentreesecond.models.TreeModel;
 import arman.papoyan.zentreesecond.utils.ScreenBlocker;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 

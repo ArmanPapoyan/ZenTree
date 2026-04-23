@@ -19,7 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import arman.papoyan.zentreesecond.R;
-import arman.papoyan.zentreesecond.model.TreeModel;
+import arman.papoyan.zentreesecond.models.TreeModel;
 import arman.papoyan.zentreesecond.utils.ScreenStateReceiver;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 
