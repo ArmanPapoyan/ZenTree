@@ -1,7 +1,10 @@
 package arman.papoyan.zentreesecond.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +13,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import arman.papoyan.zentreesecond.R;
@@ -24,10 +29,14 @@ public class FocusFragment extends Fragment {
     private Button btnTime5, btnTime15, btnTime25, btnTime45;
     private CountDownTimer countDownTimer;
     private ScreenBlocker screenBlocker;
-    private boolean isBreakActive = false;
+    public boolean isBreakActive = false;
     private long selectedTimeMillis = 5 * 60 * 1000;
     private EditText etCustomTime;
     private Button btnSetCustom;
+    private boolean waitingForDialerReturn = false;
+    private ActivityResultLauncher<Intent> dialerLauncher;
+    private boolean isOpeningDialer = false;
+    private long dialerOpenedAt = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -46,12 +55,23 @@ public class FocusFragment extends Fragment {
         etCustomTime = view.findViewById(R.id.et_custom_time);
         btnSetCustom = view.findViewById(R.id.btn_set_custom);
 
-        screenBlocker = new ScreenBlocker(requireActivity());
+        screenBlocker = new ScreenBlocker(requireActivity(), this);
+
+        dialerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (isBreakActive && !screenBlocker.isShowing()) {
+                        screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+                    }
+                    waitingForDialerReturn = false;
+                }
+        );
 
         btnTime5.setOnClickListener(v -> selectTime(5 * 60 * 1000, "05:00"));
         btnTime15.setOnClickListener(v -> selectTime(15 * 60 * 1000, "15:00"));
         btnTime25.setOnClickListener(v -> selectTime(25 * 60 * 1000, "25:00"));
         btnTime45.setOnClickListener(v -> selectTime(45 * 60 * 1000, "45:00"));
+
         btnSetCustom.setOnClickListener(v -> {
             String timeStr = etCustomTime.getText().toString().trim();
             if (!timeStr.isEmpty()) {
@@ -74,6 +94,32 @@ public class FocusFragment extends Fragment {
         tvTimer.setText("05:00");
 
         return view;
+    }
+
+    public void onHomePressed() {
+        if (isBreakActive) {
+            new Handler().postDelayed(() -> {
+                Intent intent = requireActivity().getPackageManager()
+                        .getLaunchIntentForPackage(requireActivity().getPackageName());
+                if (intent != null) {
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    startActivity(intent);
+                }
+            }, 100);
+        }
+    }
+
+    public void openDialer() {
+        isOpeningDialer = true;
+        dialerOpenedAt = System.currentTimeMillis();
+        waitingForDialerReturn = true;
+        screenBlocker.hideBlockerWithoutStop();
+
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+
+        Log.d("FocusFragment", "Dialer opened at: " + dialerOpenedAt);
     }
 
     private void selectTime(long millis, String displayText) {
@@ -167,6 +213,9 @@ public class FocusFragment extends Fragment {
         tvTimer.setText(String.format("%02d:%02d", selectedTimeMillis / 60000, 0));
         tvStatus.setText("Отдых завершён! 🎉");
         tvStatus.setTextColor(getResources().getColor(R.color.text_secondary));
+
+        isOpeningDialer = false;
+        waitingForDialerReturn = false;
     }
 
     private void cancelBreak() {
@@ -189,6 +238,9 @@ public class FocusFragment extends Fragment {
         tvTimer.setText(String.format("%02d:%02d", selectedTimeMillis / 60000, 0));
         tvStatus.setText("Отдых прерван");
         tvStatus.setTextColor(getResources().getColor(R.color.text_secondary));
+
+        isOpeningDialer = false;
+        waitingForDialerReturn = false;
     }
 
     @Override
@@ -200,5 +252,23 @@ public class FocusFragment extends Fragment {
         if (screenBlocker != null && screenBlocker.isShowing()) {
             screenBlocker.hideBlocker();
         }
+    }
+
+    public void onAppWindowFocusChanged(boolean hasFocus) {
+        if (hasFocus) {
+            isOpeningDialer = false;
+            waitingForDialerReturn = false;
+
+            if (isBreakActive && !screenBlocker.isShowing()) {
+                screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+            }
+        }
+    }
+
+    public boolean isBreakActive() {
+        return isBreakActive;
+    }
+    public long getDialerOpenedAt() {
+        return dialerOpenedAt;
     }
 }

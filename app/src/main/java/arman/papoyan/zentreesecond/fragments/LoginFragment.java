@@ -2,6 +2,7 @@ package arman.papoyan.zentreesecond.fragments;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,8 +16,20 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
@@ -31,7 +44,8 @@ public class LoginFragment extends Fragment {
     private EditText editTextPassword;
     private CheckBox checkBoxRememberMe;
     private SharedPreferences prefs;
-
+    private GoogleSignInClient googleSignInClient;
+    private static final int RC_SIGN_IN = 1001;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
@@ -43,8 +57,16 @@ public class LoginFragment extends Fragment {
         editTextPassword = view.findViewById(R.id.edit_text_password);
         checkBoxRememberMe = view.findViewById(R.id.checkBox_remember_me);
         prefs = getActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+        Button btnGoogle = view.findViewById(R.id.btn_google_sign_in);
+        btnGoogle.setOnClickListener(v -> signInWithGoogle());
 
         mAuth = FirebaseAuth.getInstance();
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
 
         buttonLogin.setOnClickListener(v -> {
             String email = editTextEmail.getText().toString().trim();
@@ -155,6 +177,51 @@ public class LoginFragment extends Fragment {
                         Exception e = task.getException();
                         Log.e("AUTH_ERROR", e.getMessage());
                         Toast.makeText(requireActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(account);
+            } catch (ApiException e) {
+                Toast.makeText(getActivity(), "Ошибка входа: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+    private void signInWithGoogle() {
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+    private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(getActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        checkAndSaveUserToFirestore(user);
+                        ((MainActivity) getActivity()).goToHomeAfterLogin();
+                    } else {
+                        Toast.makeText(getActivity(), "Ошибка аутентификации", Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+    private void checkAndSaveUserToFirestore(FirebaseUser user) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(document -> {
+                    if (!document.exists()) {
+                        Map<String, Object> userData = new HashMap<>();
+                        userData.put("name", user.getDisplayName() != null ? user.getDisplayName() : "");
+                        userData.put("email", user.getEmail());
+                        userData.put("wakeUpTime", "07:00");
+                        userData.put("screenTimeGoal", 6);
+                        userData.put("createdAt", System.currentTimeMillis());
+                        db.collection("users").document(user.getUid()).set(userData);
                     }
                 });
     }

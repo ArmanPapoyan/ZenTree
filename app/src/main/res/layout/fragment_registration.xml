@@ -4,14 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_light"
-    android:orientation="horizontal"
     android:padding="24dp">
 
     <TextView
         android:id="@+id/text_view_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="48dp"
         android:text="Регистрация"
         android:textColor="@color/primary_green_dark"
         android:textSize="28sp"
@@ -23,11 +22,13 @@
     <LinearLayout
         android:id="@+id/step_1_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
         android:orientation="vertical"
         android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/button_next"
-        app:layout_constraintTop_toBottomOf="@id/text_view_title">
+        app:layout_constraintTop_toBottomOf="@id/text_view_title"
+        app:layout_constraintVertical_bias="0">
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -43,17 +44,18 @@
                 android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
-
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/step_2_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
         android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/button_next"
-        app:layout_constraintTop_toBottomOf="@id/text_view_title">
+        app:layout_constraintTop_toBottomOf="@id/text_view_title"
+        app:layout_constraintVertical_bias="0">
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -85,16 +87,19 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/step_3_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
         android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/button_next"
-        app:layout_constraintTop_toBottomOf="@id/text_view_title">
+        app:layout_constraintTop_toBottomOf="@id/text_view_title"
+        app:layout_constraintVertical_bias="0">
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -115,7 +120,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Часов в телефоне в день"
+            android:hint="Сколько часов в телефоне в день?"
             app:boxStrokeColor="@color/primary_green">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -124,53 +129,74 @@
                 android:layout_height="wrap_content"
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:text="Время пробуждения"
             android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/edit_text_wake_up_time"
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Выбрать время"
-                android:focusable="false"
-                android:cursorVisible="false"
-                android:clickable="true"/>
+                app:boxStrokeColor="@color/primary_green">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_wake_up_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:cursorVisible="false"
+                    android:focusable="false"
+                    android:hint="Выбрать время"
+                    android:inputType="time" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/button_select_wake_up_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:text="Выбрать"
-                style="@style/Widget.Material3.Button.TextButton"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Цель по экранному времени (часы)"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:layout_marginTop="16dp"/>
+                style="@style/Widget.Material3.Button.TextButton" />
+        </LinearLayout>
 
-            <EditText
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Цель по экранному времени (часы)"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:boxStrokeColor="@color/primary_green">
+
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_text_screen_time_goal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:digits="0123456789"
                 android:hint="Например: 6"
                 android:inputType="number"
-                android:digits="0123456789"
-                android:maxLength="2"/>
-        </LinearLayout>
+                android:maxLength="2" />
+        </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
 
     <Button
@@ -183,16 +209,37 @@
         android:text="Далее"
         android:textColor="@color/white"
         app:cornerRadius="12dp"
-        app:layout_constraintBottom_toTopOf="@+id/button_go_to_login"
+        app:layout_constraintBottom_toTopOf="@+id/btn_google_sign_up"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_google_sign_up"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:text="Зарегистрироваться через Google"
+        android:textColor="@color/primary_green"
+        android:textSize="14sp"
+        app:backgroundTint="@android:color/white"
+        app:cornerRadius="8dp"
+        app:icon="@drawable/ic_google"
+        app:iconGravity="textStart"
+        app:iconPadding="16dp"
+        app:iconTint="@null"
+        app:layout_constraintBottom_toTopOf="@+id/button_go_to_login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="@color/primary_green"
+        app:strokeWidth="1.5dp" />
 
     <Button
         android:id="@+id/button_go_to_login"
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="32dp"
         android:text="Уже есть аккаунт? Войти"
         android:textColor="@color/primary_green"
         app:layout_constraintBottom_toBottomOf="parent"

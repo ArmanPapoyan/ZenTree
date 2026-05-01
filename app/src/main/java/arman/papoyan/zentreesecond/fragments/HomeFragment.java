@@ -34,6 +34,7 @@ import androidx.work.WorkManager;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
@@ -148,7 +149,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             updateTreeUI();
             Toast.makeText(getActivity(), "Тест: +30 минут к росту", Toast.LENGTH_LONG).show();
         });
-
         return view;
     }
     private void saveContinuousCheckRunning(boolean running) {

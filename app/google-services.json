@@ -12,7 +12,20 @@
           "package_name": "arman.papoyan.zentreesecond"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "969347691069-sinv2gjl8t9mmudem2fu03q4a9kt0djc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "arman.papoyan.zentreesecond",
+            "certificate_hash": "27f7c24179192abd8f91f4765df8f75807a6cb67"
+          }
+        },
+        {
+          "client_id": "969347691069-5nqmuegljb2v8dca6ione65crj73u841.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCnPEGP1pidu4L1XVAEqHCFcXCiEZeBN60"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "969347691069-5nqmuegljb2v8dca6ione65crj73u841.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

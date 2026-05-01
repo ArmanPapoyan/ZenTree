@@ -1,21 +1,24 @@
 package arman.papoyan.zentreesecond.utils;
+
 import android.app.Activity;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 import arman.papoyan.zentreesecond.R;
+import arman.papoyan.zentreesecond.fragments.FocusFragment;
 
 public class ScreenBlocker {
     private WindowManager windowManager;
     private View overlayView;
     private Activity activity;
-
-    public ScreenBlocker(Activity activity) {
+    private FocusFragment fragment;
+    public ScreenBlocker(Activity activity, FocusFragment fragment) {
         this.activity = activity;
+        this.fragment = fragment;
         windowManager = (WindowManager) activity.getSystemService(activity.WINDOW_SERVICE);
     }
 
@@ -26,6 +29,14 @@ public class ScreenBlocker {
         overlayView = inflater.inflate(R.layout.layout_screen_blocker, null);
         TextView textView = overlayView.findViewById(R.id.tv_blocker_message);
         textView.setText(message);
+
+        Button btnDialer = overlayView.findViewById(R.id.btn_open_dialer);
+        btnDialer.setOnClickListener(v -> {
+            hideBlockerWithoutStop();  // 👈 СНАЧАЛА СКРЫВАЕМ
+            if (fragment != null) {
+                fragment.openDialer();
+            }
+        });
 
         int layoutFlag;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -51,15 +62,29 @@ public class ScreenBlocker {
 
         windowManager.addView(overlayView, params);
     }
-
+    public boolean isShowing() {
+        return overlayView != null && overlayView.isAttachedToWindow();
+    }
     public void hideBlocker() {
         if (overlayView != null && overlayView.isAttachedToWindow()) {
-            windowManager.removeView(overlayView);
+            try {
+                windowManager.removeView(overlayView);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
             overlayView = null;
         }
     }
-
-    public boolean isShowing() {
-        return overlayView != null && overlayView.isAttachedToWindow();
+    public void hideBlockerWithoutStop() {
+        if (overlayView != null) {
+            try {
+                if (overlayView.isAttachedToWindow()) {
+                    windowManager.removeView(overlayView);
+                }
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+            overlayView = null;
+        }
     }
 }

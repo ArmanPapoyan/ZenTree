@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#CC000000">
 
     <TextView
@@ -15,5 +16,18 @@
         android:gravity="center"
         android:textStyle="bold"
         android:padding="32dp" />
+
+    <Button
+        android:id="@+id/btn_open_dialer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Открыть телефон"
+        android:backgroundTint="@color/primary_green"
+        android:textColor="@color/white"
+        android:padding="12dp"
+        app:cornerRadius="24dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/tv_blocker_message"
+        android:layout_marginTop="32dp" />
 
 </RelativeLayout>
