@@ -4,6 +4,7 @@ import static android.content.Context.MODE_PRIVATE;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,10 +22,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -74,9 +80,7 @@ public class ProfileFragment extends Fragment {
         btnThemeLight.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_NO));
         btnThemeDark.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_YES));
 
-        deleteButton.setOnClickListener(v -> {
-            showPasswordDialog();
-        });
+        deleteButton.setOnClickListener(v -> deleteAccount());
         return view;
     }
     private void setThemeMode(int mode) {
@@ -265,4 +269,129 @@ public class ProfileFragment extends Fragment {
                 .replace(R.id.fragment_container, loginFragment)
                 .commit();
     }
+    private enum AuthProvider {
+        EMAIL_PASSWORD,
+        GOOGLE,
+        UNKNOWN
+    }
+
+    private AuthProvider getCurrentAuthProvider() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return AuthProvider.UNKNOWN;
+
+        for (UserInfo profile : user.getProviderData()) {
+            String providerId = profile.getProviderId();
+            if (providerId.equals("google.com")) {
+                return AuthProvider.GOOGLE;
+            }
+            if (providerId.equals("password")) {
+                return AuthProvider.EMAIL_PASSWORD;
+            }
+        }
+        return AuthProvider.EMAIL_PASSWORD;
+    }
+    private void deleteAccount() {
+        AuthProvider provider = getCurrentAuthProvider();
+
+        if (provider == AuthProvider.GOOGLE) {
+            deleteGoogleAccount();
+        } else if (provider == AuthProvider.EMAIL_PASSWORD) {
+            showPasswordDialog();
+        } else {
+            Toast.makeText(getContext(), "Неизвестный тип аккаунта", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void deleteGoogleAccount() {
+        showDeleteDialogForGoogle();
+    }
+    private void showDeleteDialogForGoogle() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Удалить аккаунт?")
+                .setMessage(R.string.delete_text)
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    performGoogleAccountDeletion();
+                })
+                .setNegativeButton("Отмена", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED);
+    }
+    private void performGoogleAccountDeletion() {
+        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage("Удаление аккаунта...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            user.delete()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            googleSignInClient.revokeAccess()
+                                    .addOnCompleteListener(revokeTask -> {
+                                        progressDialog.dismiss();
+                                        if (revokeTask.isSuccessful()) {
+                                            deleteUserDataFromFirestore();
+                                            Toast.makeText(getContext(), "Аккаунт удалён", Toast.LENGTH_SHORT).show();
+                                            navigateToLogin();
+                                        } else {
+                                            Toast.makeText(getContext(), "Ошибка при отзыве доступа Google", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        } else {
+                            progressDialog.dismiss();
+                            Toast.makeText(getContext(), "Ошибка удаления: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+    }
+
+    private void navigateToLogin() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", Context.MODE_PRIVATE);
+        prefs.edit().clear().apply();
+
+        SharedPreferences regPrefs = requireActivity().getSharedPreferences("registration_prefs", Context.MODE_PRIVATE);
+        regPrefs.edit().clear().apply();
+
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).hideNavigation();
+        }
+
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                .replace(R.id.fragment_container, new LoginFragment())
+                .commit();
+    }
+    private void deleteUserDataFromFirestore() {
+        String userId = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+        if (userId == null) return;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users").document(userId).collection("tasks")
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        doc.getReference().delete();
+                    }
+                });
+
+        db.collection("users").document(userId).collection("tree").document("current")
+                .delete();
+
+        db.collection("users").document(userId).delete();
+    }
+
 }
