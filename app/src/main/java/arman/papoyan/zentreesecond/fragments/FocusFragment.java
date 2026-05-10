@@ -1,10 +1,11 @@
 package arman.papoyan.zentreesecond.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.util.Log;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
+import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.models.TreeModel;
 import arman.papoyan.zentreesecond.utils.ScreenBlocker;
@@ -37,7 +39,12 @@ public class FocusFragment extends Fragment {
     private ActivityResultLauncher<Intent> dialerLauncher;
     private boolean isOpeningDialer = false;
     private long dialerOpenedAt = 0;
-
+    private static final String PREFS_BREAK = "break_state";
+    private static final String KEY_BREAK_ACTIVE = "break_active";
+    private static final String KEY_SELECTED_TIME = "selected_time";
+    private static final String KEY_REMAINING_TIME = "remaining_time";
+    private static final String KEY_DIALER_OPENED_AT = "dialer_opened_at";
+    private long remainingTimeMillis = 0;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_focus, container, false);
@@ -90,36 +97,74 @@ public class FocusFragment extends Fragment {
         btnStartBreak.setOnClickListener(v -> startBreak());
         btnCancel.setOnClickListener(v -> cancelBreak());
 
+        restoreBreakState();
+        if (!isBreakActive) {
+            updateTimeButtons();
+            tvTimer.setText("05:00");
+        }
+
         updateTimeButtons();
         tvTimer.setText("05:00");
 
         return view;
     }
+    private void saveBreakState() {
+        if (!isBreakActive) return;
+        SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_BREAK, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(KEY_BREAK_ACTIVE, true);
+        editor.putLong(KEY_SELECTED_TIME, selectedTimeMillis);
+        editor.putLong(KEY_DIALER_OPENED_AT, dialerOpenedAt);
 
-    public void onHomePressed() {
-        if (isBreakActive) {
-            new Handler().postDelayed(() -> {
-                Intent intent = requireActivity().getPackageManager()
-                        .getLaunchIntentForPackage(requireActivity().getPackageName());
-                if (intent != null) {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    startActivity(intent);
-                }
-            }, 100);
+        long remaining = 0;
+        if (countDownTimer != null) {
+            remaining = remainingTimeMillis;
         }
+        editor.putLong(KEY_REMAINING_TIME, remaining);
+        editor.apply();
+    }
+    private void clearBreakState() {
+        requireActivity().getSharedPreferences(PREFS_BREAK, Context.MODE_PRIVATE).edit().clear().apply();
+    }
+    private void restoreBreakState() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_BREAK, Context.MODE_PRIVATE);
+        boolean wasBreakActive = prefs.getBoolean(KEY_BREAK_ACTIVE, false);
+        if (!wasBreakActive) return;
+        selectedTimeMillis = prefs.getLong(KEY_SELECTED_TIME, 5 * 60 * 1000);
+        dialerOpenedAt = prefs.getLong(KEY_DIALER_OPENED_AT, 0);
+        long remaining = prefs.getLong(KEY_REMAINING_TIME, selectedTimeMillis);
+        if (remaining <= 0) {
+            clearBreakState();
+            return;
+        }
+        isBreakActive = true;
+        btnStartBreak.setVisibility(View.GONE);
+        btnCancel.setVisibility(View.VISIBLE);
+        btnTime5.setVisibility(View.GONE);
+        btnTime15.setVisibility(View.GONE);
+        btnTime25.setVisibility(View.GONE);
+        btnTime45.setVisibility(View.GONE);
+        tvStatus.setText("Отдыхаем... Не пользуйтесь телефоном");
+        tvStatus.setTextColor(getResources().getColor(R.color.primary_green));
+        startTimer(remaining);
+        if (Settings.canDrawOverlays(requireContext())) {
+            screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+        }
+        clearBreakState();
     }
 
     public void openDialer() {
         isOpeningDialer = true;
         dialerOpenedAt = System.currentTimeMillis();
-        waitingForDialerReturn = true;
-        screenBlocker.hideBlockerWithoutStop();
-
+        if (screenBlocker.isShowing()) {
+            screenBlocker.setTransparent(true);
+        }
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).onDialerOpened();
+        }
         Intent intent = new Intent(Intent.ACTION_DIAL);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-
-        Log.d("FocusFragment", "Dialer opened at: " + dialerOpenedAt);
     }
 
     private void selectTime(long millis, String displayText) {
@@ -177,6 +222,7 @@ public class FocusFragment extends Fragment {
         countDownTimer = new CountDownTimer(millis, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
+                remainingTimeMillis = millisUntilFinished;
                 long minutes = (millisUntilFinished / 1000) / 60;
                 long seconds = (millisUntilFinished / 1000) % 60;
                 tvTimer.setText(String.format("%02d:%02d", minutes, seconds));
@@ -187,6 +233,13 @@ public class FocusFragment extends Fragment {
                 finishBreak();
             }
         }.start();
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (isBreakActive) {
+            saveBreakState();
+        }
     }
 
     private void finishBreak() {
@@ -216,6 +269,7 @@ public class FocusFragment extends Fragment {
 
         isOpeningDialer = false;
         waitingForDialerReturn = false;
+        clearBreakState();
     }
 
     private void cancelBreak() {
@@ -241,8 +295,8 @@ public class FocusFragment extends Fragment {
 
         isOpeningDialer = false;
         waitingForDialerReturn = false;
+        clearBreakState();
     }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -252,23 +306,46 @@ public class FocusFragment extends Fragment {
         if (screenBlocker != null && screenBlocker.isShowing()) {
             screenBlocker.hideBlocker();
         }
+        if (isBreakActive) {
+            saveBreakState();
+        }
     }
-
     public void onAppWindowFocusChanged(boolean hasFocus) {
         if (hasFocus) {
             isOpeningDialer = false;
             waitingForDialerReturn = false;
 
-            if (isBreakActive && !screenBlocker.isShowing()) {
-                screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+            if (isBreakActive) {
+                if (screenBlocker.isShowing()) {
+                    screenBlocker.setTransparent(false);
+                } else {
+                    screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) +
+                            " минут\nНе пользуйтесь телефоном");
+                }
             }
         }
     }
+
 
     public boolean isBreakActive() {
         return isBreakActive;
     }
     public long getDialerOpenedAt() {
         return dialerOpenedAt;
+    }
+    public boolean isOpeningDialer() {
+        return isOpeningDialer;
+    }
+
+    public void setOpeningDialer(boolean opening) {
+        this.isOpeningDialer = opening;
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isBreakActive && !screenBlocker.isShowing()) {
+            screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) +
+                    " минут\nНе пользуйтесь телефоном");
+        }
     }
 }

@@ -1,7 +1,9 @@
 package arman.papoyan.zentreesecond;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application;
+import android.app.PendingIntent;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.content.BroadcastReceiver;
@@ -99,11 +101,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onActivityPaused(@NonNull Activity activity) {
-                if (activity == MainActivity.this) {
-                    startReturnChecker();
-                }
-            }
+            public void onActivityPaused(@NonNull Activity activity) {}
 
             @Override
             public void onActivityStopped(@NonNull Activity activity) {}
@@ -156,47 +154,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startReturnChecker() {
-        stopReturnChecker();
+        if (returnCheckRunnable != null) return;
 
         returnCheckRunnable = new Runnable() {
+            private int retryCount = 0;
+
             @Override
             public void run() {
-                Fragment currentFrag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                Fragment currentFrag = getSupportFragmentManager()
+                        .findFragmentById(R.id.fragment_container);
                 if (currentFrag instanceof FocusFragment) {
                     FocusFragment focusFragment = (FocusFragment) currentFrag;
                     boolean isBreakActive = focusFragment.isBreakActive();
+                    boolean isOpeningDialer = focusFragment.isOpeningDialer();
+
+                    if (!isBreakActive || !isOpeningDialer) {
+                        stopReturnChecker();
+                        return;
+                    }
+
                     long dialerOpenedAt = focusFragment.getDialerOpenedAt();
                     long timeSinceDialer = System.currentTimeMillis() - dialerOpenedAt;
+                    if (timeSinceDialer < 2000) {
+                        returnCheckHandler.postDelayed(this, 1000);
+                        return;
+                    }
 
                     String currentPackage = getForegroundPackage();
-                    boolean isCurrentPackageDialer = isDialerPackage(currentPackage);
-                    boolean isCurrentPackageZenTree = getPackageName().equals(currentPackage);
+                    boolean isDialer = isDialerPackage(currentPackage);
+                    boolean isZenTree = getPackageName().equals(currentPackage);
 
-                    Log.d("MainActivity", "=========================================");
-                    Log.d("MainActivity", "ReturnChecker:");
-                    Log.d("MainActivity", "  isBreakActive = " + isBreakActive);
-                    Log.d("MainActivity", "  timeSinceDialer = " + timeSinceDialer + "ms");
-                    Log.d("MainActivity", "  currentPackage = " + currentPackage);
-                    Log.d("MainActivity", "  isCurrentPackageDialer = " + isCurrentPackageDialer);
-                    Log.d("MainActivity", "  isCurrentPackageZenTree = " + isCurrentPackageZenTree);
-                    Log.d("MainActivity", "=========================================");
-
-                    if (isBreakActive && !isCurrentPackageDialer && !isCurrentPackageZenTree && timeSinceDialer > 2000) {
-                        Log.d("MainActivity", "⚠️⚠️⚠️ ВОЗВРАЩАЕМ ПРИЛОЖЕНИЕ из " + currentPackage);
-                        Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
-                        if (intent != null) {
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                            startActivity(intent);
+                    if (!isDialer && !isZenTree) {
+                        Log.d("MainActivity", "⚠️ Возвращаем (попытка " + (retryCount+1) + ") из: " + currentPackage);
+                        boolean success = bringAppToFront();
+                        if (success) {
+                            stopReturnChecker();
+                        } else {
+                            retryCount++;
+                            long delay = Math.min(3000, 1000 * retryCount);
+                            returnCheckHandler.postDelayed(this, delay);
                         }
-                    } else {
-                        Log.d("MainActivity", "✅ НЕ возвращаем. Причина:");
-                        if (!isBreakActive) Log.d("MainActivity", "   - isBreakActive = false");
-                        if (isCurrentPackageDialer) Log.d("MainActivity", "   - isCurrentPackageDialer = true (пользователь в звонилке)");
-                        if (isCurrentPackageZenTree) Log.d("MainActivity", "   - isCurrentPackageZenTree = true (уже в ZenTree)");
-                        if (timeSinceDialer <= 2000) Log.d("MainActivity", "   - timeSinceDialer <= 2000 (ждём)");
+                        return;
                     }
                 }
-
                 returnCheckHandler.postDelayed(this, 1000);
             }
         };
@@ -424,10 +424,17 @@ public class MainActivity extends AppCompatActivity {
         super.onWindowFocusChanged(hasFocus);
         Fragment currentFrag = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFrag instanceof FocusFragment) {
-            ((FocusFragment) currentFrag).onAppWindowFocusChanged(hasFocus);
+            FocusFragment focusFragment = (FocusFragment) currentFrag;
+            focusFragment.onAppWindowFocusChanged(hasFocus);
+            if (hasFocus) {
+                focusFragment.setOpeningDialer(false);
+                stopReturnChecker();
+            }
         }
     }
-
+    public void onDialerOpened() {
+        startReturnChecker();
+    }
     public class NetworkCallback extends ConnectivityManager.NetworkCallback {
         private MainActivity activity;
 
@@ -457,4 +464,36 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+    private boolean bringAppToFront() {
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            List<ActivityManager.AppTask> tasks = am.getAppTasks();
+            if (tasks != null && !tasks.isEmpty()) {
+                tasks.get(0).moveToFront();
+                return true;
+            }
+        } catch (Exception e) { /* DATARK */ }
+
+        try {
+            Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+            if (intent != null) {
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+                return true;
+            }
+        } catch (Exception e) { /* DATARK */ }
+        try {
+            Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    this, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+            pendingIntent.send();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

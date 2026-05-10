@@ -23,7 +23,17 @@ public class ScreenBlocker {
     }
 
     public void showBlocker(String message) {
-        if (overlayView != null) return;
+        if (overlayView != null && overlayView.isAttachedToWindow()) {
+            return;
+        }
+        if (overlayView != null) {
+            try {
+                windowManager.removeView(overlayView);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+            overlayView = null;
+        }
 
         LayoutInflater inflater = LayoutInflater.from(activity);
         overlayView = inflater.inflate(R.layout.layout_screen_blocker, null);
@@ -32,7 +42,7 @@ public class ScreenBlocker {
 
         Button btnDialer = overlayView.findViewById(R.id.btn_open_dialer);
         btnDialer.setOnClickListener(v -> {
-            hideBlockerWithoutStop();  // 👈 СНАЧАЛА СКРЫВАЕМ
+            hideBlockerWithoutStop();
             if (fragment != null) {
                 fragment.openDialer();
             }
@@ -53,15 +63,13 @@ public class ScreenBlocker {
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 android.graphics.PixelFormat.TRANSLUCENT
         );
-
         params.gravity = Gravity.TOP | Gravity.START;
 
-        overlayView.setOnTouchListener((v, event) -> {
-            return true;
-        });
+        overlayView.setOnTouchListener((v, event) -> true);
 
         windowManager.addView(overlayView, params);
     }
+
     public boolean isShowing() {
         return overlayView != null && overlayView.isAttachedToWindow();
     }
@@ -85,6 +93,12 @@ public class ScreenBlocker {
                 e.printStackTrace();
             }
             overlayView = null;
+        }
+    }
+    public void setTransparent(boolean transparent) {
+        if (overlayView != null && overlayView.isAttachedToWindow()) {
+            overlayView.setAlpha(transparent ? 0f : 1f);
+            overlayView.setClickable(!transparent);
         }
     }
 }
