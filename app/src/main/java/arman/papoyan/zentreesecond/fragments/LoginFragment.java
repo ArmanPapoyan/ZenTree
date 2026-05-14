@@ -197,19 +197,6 @@ public class LoginFragment extends Fragment {
         Intent signInIntent = googleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
-    private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(getActivity(), task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        checkAndSaveUserToFirestore(user);
-                        ((MainActivity) getActivity()).goToHomeAfterLogin();
-                    } else {
-                        Toast.makeText(getActivity(), "Ошибка аутентификации", Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
     private void checkAndSaveUserToFirestore(FirebaseUser user) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("users").document(user.getUid()).get()
@@ -222,6 +209,68 @@ public class LoginFragment extends Fragment {
                         userData.put("screenTimeGoal", 6);
                         userData.put("createdAt", System.currentTimeMillis());
                         db.collection("users").document(user.getUid()).set(userData);
+                    }
+                });
+    }
+    private void checkUserInFirestore(FirebaseUser user) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String userId = user.getUid();
+
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+                        prefs.edit().putBoolean("is_guest", false).apply();
+
+                        TreeFirestoreManager firestoreManager = new TreeFirestoreManager();
+                        firestoreManager.loadTree(new TreeFirestoreManager.TreeLoadCallback() {
+                            @Override
+                            public void onSuccess(TreeModel tree) {
+                                TreeManager treeManager = new TreeManager(getActivity());
+                                treeManager.saveTree(tree);
+                                ((MainActivity) getActivity()).goToHomeAfterLogin();
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                TreeModel newTree = new TreeModel();
+                                TreeManager treeManager = new TreeManager(getActivity());
+                                treeManager.saveTree(newTree);
+                                ((MainActivity) getActivity()).goToHomeAfterLogin();
+                            }
+                        });
+                    } else {
+                        goToRegistrationWithGoogleData(user);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("LoginFragment", "Ошибка проверки пользователя: " + e.getMessage());
+                    goToRegistrationWithGoogleData(user);
+                });
+    }
+    private void goToRegistrationWithGoogleData(FirebaseUser user) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+        prefs.edit()
+                .putString("temp_email", user.getEmail())
+                .putString("temp_name", user.getDisplayName() != null ? user.getDisplayName() : "")
+                .putBoolean("is_google_user", true)
+                .apply();
+        SharedPreferences regPrefs = requireActivity().getSharedPreferences("registration_prefs", MODE_PRIVATE);
+        regPrefs.edit().putBoolean("is_registering", true).apply();
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).switchAuthFragment(new RegistrationFragment());
+            ((MainActivity) getActivity()).hideNavigation();
+        }
+    }
+    private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(getActivity(), task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        checkUserInFirestore(user);
+                    } else {
+                        Toast.makeText(getActivity(), "Ошибка аутентификации", Toast.LENGTH_LONG).show();
                     }
                 });
     }

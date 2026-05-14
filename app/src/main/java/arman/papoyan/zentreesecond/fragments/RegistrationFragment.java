@@ -97,8 +97,24 @@ public class RegistrationFragment extends Fragment {
                 ((MainActivity) getActivity()).switchAuthFragment(new LoginFragment());
             }
         });
+        SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+        String tempEmail = prefs.getString("temp_email", "");
+        String tempName = prefs.getString("temp_name", "");
+        boolean isGoogleUserTemp = prefs.getBoolean("is_google_user", false);
+        if (!tempEmail.isEmpty()) {
+            etEmail.setText(tempEmail);
+            etEmail.setEnabled(false);
+            isGoogleUser = true;
+            currentStep = 3;
+            showStep(3);
+            btnNext.setText("Завершить");
+            btnNext.setOnClickListener(v -> registerUser());
+        }
 
-        SharedPreferences prefs = requireActivity().getSharedPreferences("registration_prefs", MODE_PRIVATE);
+        if (!tempName.isEmpty()) {
+            etName.setText(tempName);
+        }
+
         prefs.edit().putBoolean("is_registering", true).apply();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -325,42 +341,6 @@ public class RegistrationFragment extends Fragment {
                 });
     }
 
-    private void saveUserToFirestore(String email, String name, String wakeUpTime, String screenTimeGoalStr) {
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user == null) return;
-
-        int screenTimeGoal = Integer.parseInt(screenTimeGoalStr);
-        String userId = user.getUid();
-
-        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                .setDisplayName(name)
-                .build();
-        user.updateProfile(profileUpdates);
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("name", name);
-        userData.put("email", email);
-        userData.put("wakeUpTime", wakeUpTime);
-        userData.put("screenTimeGoal", screenTimeGoal);
-        userData.put("createdAt", System.currentTimeMillis());
-
-        db.collection("users").document(userId).set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Registration", "Данные пользователя сохранены");
-                    if (isGoogleUser) {
-                        new FirstLaunchManager(getActivity()).setFirstLaunchDone();
-                        ((MainActivity) getActivity()).goToHomeFragment();
-                    } else {
-                        showVerificationDialog(user);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Registration", "Ошибка: " + e.getMessage());
-                    Toast.makeText(getActivity(), "Ошибка сохранения данных", Toast.LENGTH_LONG).show();
-                });
-    }
-
     private void showVerificationDialog(FirebaseUser user) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Подтвердите email");
@@ -393,5 +373,46 @@ public class RegistrationFragment extends Fragment {
         super.onDestroyView();
         SharedPreferences prefs = requireActivity().getSharedPreferences("registration_prefs", Context.MODE_PRIVATE);
         prefs.edit().putBoolean("is_registering", false).apply();
+    }
+    private void saveUserToFirestore(String email, String name, String wakeUpTime, String screenTimeGoalStr) {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
+
+        int screenTimeGoal = Integer.parseInt(screenTimeGoalStr);
+        String userId = user.getUid();
+
+        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                .setDisplayName(name)
+                .build();
+        user.updateProfile(profileUpdates);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("name", name);
+        userData.put("email", email);
+        userData.put("wakeUpTime", wakeUpTime);
+        userData.put("screenTimeGoal", screenTimeGoal);
+        userData.put("createdAt", System.currentTimeMillis());
+
+        db.collection("users").document(userId).set(userData)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Registration", "Данные пользователя сохранены");
+                    SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+                    prefs.edit().remove("temp_email").remove("temp_name").remove("is_google_user").apply();
+
+                    SharedPreferences regPrefs = requireActivity().getSharedPreferences("registration_prefs", MODE_PRIVATE);
+                    regPrefs.edit().putBoolean("is_registering", false).apply();
+
+                    if (isGoogleUser) {
+                        new FirstLaunchManager(getActivity()).setFirstLaunchDone();
+                        ((MainActivity) getActivity()).goToHomeFragment();
+                    } else {
+                        showVerificationDialog(user);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Registration", "Ошибка: " + e.getMessage());
+                    Toast.makeText(getActivity(), "Ошибка сохранения данных", Toast.LENGTH_LONG).show();
+                });
     }
 }
