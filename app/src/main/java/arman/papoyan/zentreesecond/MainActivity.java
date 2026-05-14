@@ -12,8 +12,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,22 +36,21 @@ import java.util.List;
 import arman.papoyan.zentreesecond.fragments.FocusFragment;
 import arman.papoyan.zentreesecond.fragments.HomeFragment;
 import arman.papoyan.zentreesecond.fragments.LoginFragment;
-import arman.papoyan.zentreesecond.fragments.NoInternetFragment;
 import arman.papoyan.zentreesecond.fragments.ProfileFragment;
 import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
 import arman.papoyan.zentreesecond.services.TrackerForegroundService;
-import arman.papoyan.zentreesecond.utils.NetworkUtils;
+import arman.papoyan.zentreesecond.utils.SyncHelper;
+import arman.papoyan.zentreesecond.utils.TreeManager;
 
 public class MainActivity extends AppCompatActivity {
 
     public BottomNavigationView bottomNav;
     private Fragment currentFragment;
     private int currentNavItemId = R.id.nav_home;
-    private NetworkCallback networkCallback;
     private static final int OVERLAY_PERMISSION_REQUEST = 100;
-
+    private boolean isOnline = true;
     private Handler returnCheckHandler = new Handler();
     private Runnable returnCheckRunnable;
 
@@ -82,8 +79,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        networkCallback = new NetworkCallback(this);
-        cm.registerDefaultNetworkCallback(networkCallback);
         bottomNav = findViewById(R.id.bottom_navigation);
 
         getApplication().registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
@@ -123,36 +118,39 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(currentFragment, false);
             return;
         }
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
+        boolean isGuest = prefs.getBoolean("is_guest", false);
 
-        if (NetworkUtils.isInternetAvailable(this)) {
-            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-            Log.d("MainActivity", "currentUser = " + (currentUser != null ? currentUser.getUid() : "null"));
-            SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
-            boolean isGuest = prefs.getBoolean("is_guest", false);
-
-            if (isGuest || currentUser != null) {
-                bottomNav.setVisibility(View.VISIBLE);
-                Fragment fragment = getFragmentForNavItem(currentNavItemId);
-                currentFragment = fragment;
-                loadFragment(fragment, false);
-                setupNavigation();
-                if (getIntent().getBooleanExtra("open_focus_tab", false)) {
-                    bottomNav.setSelectedItemId(R.id.nav_focus);
-                    getIntent().removeExtra("open_focus_tab");
-                }
-                bottomNav.setSelectedItemId(currentNavItemId);
-            } else {
-                bottomNav.setVisibility(View.GONE);
-                currentFragment = new LoginFragment();
-                loadFragment(currentFragment, false);
+        if (isGuest || currentUser != null) {
+            bottomNav.setVisibility(View.VISIBLE);
+            Fragment fragment = getFragmentForNavItem(currentNavItemId);
+            currentFragment = fragment;
+            loadFragment(fragment, false);
+            setupNavigation();
+            if (getIntent().getBooleanExtra("open_focus_tab", false)) {
+                bottomNav.setSelectedItemId(R.id.nav_focus);
+                getIntent().removeExtra("open_focus_tab");
             }
+            bottomNav.setSelectedItemId(currentNavItemId);
+
+            syncPendingData();
+
         } else {
             bottomNav.setVisibility(View.GONE);
-            currentFragment = new NoInternetFragment();
+            currentFragment = new LoginFragment();
             loadFragment(currentFragment, false);
         }
-    }
 
+    }
+    private void syncPendingData() {
+        TreeManager treeManager = new TreeManager(this);
+        treeManager.syncPendingTree();
+        Fragment tasksFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (tasksFragment instanceof TasksFragment) {
+            ((TasksFragment) tasksFragment).syncPendingTasks();
+        }
+    }
     private void startReturnChecker() {
         if (returnCheckRunnable != null) return;
 
@@ -278,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         stopReturnChecker();
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        cm.unregisterNetworkCallback(networkCallback);
         Intent intent = new Intent(this, TrackerForegroundService.class);
         stopService(intent);
     }
@@ -290,12 +287,6 @@ public class MainActivity extends AppCompatActivity {
             if (!Settings.canDrawOverlays(this)) {
                 Toast.makeText(this, "Без этого разрешения блокировка экрана не будет работать", Toast.LENGTH_LONG).show();
             }
-        }
-    }
-
-    public void retryConnection() {
-        if (NetworkUtils.isInternetAvailable(this)) {
-            recreate();
         }
     }
 
@@ -388,37 +379,6 @@ public class MainActivity extends AppCompatActivity {
         return currentNavItemId;
     }
 
-    public void showNoInternetFragment() {
-        if (currentFragment instanceof NoInternetFragment) {
-            return;
-        }
-
-        bottomNav.setVisibility(View.GONE);
-        currentFragment = new NoInternetFragment();
-        loadFragment(currentFragment, false);
-    }
-
-    public void showMainContent() {
-        if (!(currentFragment instanceof NoInternetFragment)) {
-            return;
-        }
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
-        boolean isGuest = prefs.getBoolean("is_guest", false);
-
-        if (isGuest || currentUser != null) {
-            bottomNav.setVisibility(View.VISIBLE);
-            currentFragment = new HomeFragment();
-            loadFragment(currentFragment, false);
-            setupNavigation();
-        } else {
-            bottomNav.setVisibility(View.GONE);
-            currentFragment = new LoginFragment();
-            loadFragment(currentFragment, false);
-        }
-    }
-
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -435,35 +395,7 @@ public class MainActivity extends AppCompatActivity {
     public void onDialerOpened() {
         startReturnChecker();
     }
-    public class NetworkCallback extends ConnectivityManager.NetworkCallback {
-        private MainActivity activity;
 
-        public NetworkCallback(MainActivity activity) {
-            this.activity = activity;
-        }
-
-        @Override
-        public void onLost(Network network) {
-            activity.runOnUiThread(() -> activity.showNoInternetFragment());
-        }
-
-        @Override
-        public void onAvailable(Network network) {}
-
-        @Override
-        public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
-            boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-            boolean isValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
-
-            activity.runOnUiThread(() -> {
-                if (hasInternet && isValidated) {
-                    activity.showMainContent();
-                } else {
-                    activity.showNoInternetFragment();
-                }
-            });
-        }
-    }
     private boolean bringAppToFront() {
         try {
             ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -495,5 +427,20 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+    private void checkConnectivity() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        android.net.Network currentNetwork = cm.getActiveNetwork();
+        boolean wasOnline = isOnline;
+        isOnline = currentNetwork != null;
 
+        if (isOnline && !wasOnline) {
+            new SyncHelper(this).syncAll();
+        }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkConnectivity();
+        syncPendingData();
+    }
 }

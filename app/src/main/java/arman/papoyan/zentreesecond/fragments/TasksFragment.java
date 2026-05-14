@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,10 +38,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
 import arman.papoyan.zentreesecond.models.Task;
+import arman.papoyan.zentreesecond.utils.SyncQueueManager;
 
 public class TasksFragment extends Fragment {
 
@@ -462,5 +466,30 @@ public class TasksFragment extends Fragment {
                 .setNegativeButton("Отмена", null);
 
         builder.create().show();
+    }
+    public void syncPendingTasks() {
+        if (userId == null || getContext() == null) return;
+
+        Gson gson = new Gson();
+        List<String> pendingTasks = SyncQueueManager.getInstance(getContext()).getPendingTasks();
+        if (pendingTasks.isEmpty()) return;
+
+        for (int i = 0; i < pendingTasks.size(); i++) {
+            final int index = i;
+            String taskJson = pendingTasks.get(index);
+            Map<String, Object> taskMap = gson.fromJson(taskJson, Map.class);
+            String taskId = (String) taskMap.get("id");
+
+            db.collection("tasks").document(userId)
+                    .collection("userTasks").document(taskId)
+                    .set(taskMap)
+                    .addOnSuccessListener(aVoid -> {
+                        SyncQueueManager.getInstance(getContext()).removePendingTask(index);
+                        Log.d("TasksFragment", "Task synced: " + taskId);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("TasksFragment", "Failed to sync task: " + taskId, e);
+                    });
+        }
     }
 }

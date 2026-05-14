@@ -95,7 +95,7 @@ public class TrackerForegroundService extends Service {
             Log.d("TrackerService", "Длительный перерыв, сброс");
         }
 
-        if (continuousTime >= 60 * 60 * 1000 && (now - lastNotify >= 1 * 60 * 1000)) {
+        if (continuousTime >= 60 * 60 * 1000 && (now - lastNotify >= 60 * 60 * 1000)) {
             sendNotification();
             prefs.edit().putLong("last_notification_time", now).apply();
             continuousTime = 0;

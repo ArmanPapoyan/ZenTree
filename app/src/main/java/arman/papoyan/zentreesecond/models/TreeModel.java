@@ -16,7 +16,24 @@ public class TreeModel {
     public int getProgressPercentage() { return progressInCurrentStage; }
     public boolean isGrowing() { return isGrowing; }
     public String getLastUpdateDate() { return lastUpdateDate; }
+
+    public void setLevel(int level) { this.level = level; }
+    public void setTotalMinutes(int totalMinutes) { this.totalMinutes = totalMinutes; }
+    public void setCurrentStage(int currentStage) { this.currentStage = currentStage; }
+    public void setProgressInCurrentStage(int progress) { this.progressInCurrentStage = progress; }
     public void setLastUpdateDate(String date) { this.lastUpdateDate = date; }
+
+    public void setBonusMinutes(int minutes) {
+        this.totalMinutes += minutes;
+        int newLevel = totalMinutes / 60;
+        if (newLevel > level) {
+            level = newLevel;
+        }
+        int newStage = Math.min(level, 6);
+        if (newStage > currentStage) {
+            currentStage = newStage;
+        }
+    }
 
     public void addMinutes(int minutes, int x, float motivation) {
         int currentStageForCalc = Math.min(currentStage, 5);
@@ -36,9 +53,9 @@ public class TreeModel {
 
         level = currentStage;
     }
+
     public void addBonusMinutes(int minutes) {
         this.totalMinutes += minutes;
-
         int newLevel = totalMinutes / 60;
         if (newLevel > level) {
             level = newLevel;
@@ -48,6 +65,7 @@ public class TreeModel {
             currentStage = newStage;
         }
     }
+
     public void startGrowth() {
         isGrowing = true;
         growthStartTime = System.currentTimeMillis();
