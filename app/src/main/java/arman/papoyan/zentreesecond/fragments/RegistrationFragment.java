@@ -107,7 +107,7 @@ public class RegistrationFragment extends Fragment {
             isGoogleUser = true;
             currentStep = 3;
             showStep(3);
-            btnNext.setText("Завершить");
+            btnNext.setText(getString(R.string.action_finish));
             btnNext.setOnClickListener(v -> registerUser());
         }
 
@@ -174,7 +174,7 @@ public class RegistrationFragment extends Fragment {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
-                Toast.makeText(getActivity(), "Ошибка входа: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), getString(R.string.error_sign_in_failed, e.getMessage()), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -190,12 +190,12 @@ public class RegistrationFragment extends Fragment {
                         etName.setText(user.getDisplayName());
                         currentStep = 3;
                         showStep(3);
-                        btnNext.setText("Завершить");
+                        btnNext.setText(getString(R.string.action_finish));
                         btnNext.setOnClickListener(v -> registerUser());
 
-                        Toast.makeText(getActivity(), "Данные из Google загружены. Заполните остальные поля.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), getString(R.string.toast_google_data_loaded), Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(getActivity(), "Ошибка аутентификации", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_auth_failed), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -230,7 +230,7 @@ public class RegistrationFragment extends Fragment {
         String email = etEmail.getText().toString().trim();
 
         if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Введите корректный email");
+            etEmail.setError(getString(R.string.error_invalid_email));
             return;
         }
         showStep(2);
@@ -241,11 +241,11 @@ public class RegistrationFragment extends Fragment {
         String confirmPass = etConfirmPass.getText().toString();
 
         if (pass.length() < 6) {
-            etPass.setError("Минимум 6 символов");
+            etPass.setError(getString(R.string.error_password_too_short));
             return;
         }
         if (!pass.equals(confirmPass)) {
-            etConfirmPass.setError("Пароли не совпадают");
+            etConfirmPass.setError(getString(R.string.error_passwords_dont_match));
             return;
         }
         showStep(3);
@@ -258,11 +258,11 @@ public class RegistrationFragment extends Fragment {
         step2Container.setVisibility(step == 2 ? View.VISIBLE : View.GONE);
         step3Container.setVisibility(step == 3 ? View.VISIBLE : View.GONE);
 
-        if (step == 1) textViewTitle.setText("Ваша почта");
-        if (step == 2) textViewTitle.setText("Придумайте пароль");
+        if (step == 1) textViewTitle.setText(getString(R.string.title_step_email));
+        if (step == 2) textViewTitle.setText(getString(R.string.title_step_password));
         if (step == 3) {
-            textViewTitle.setText("Почти готово!");
-            btnNext.setText("Завершить");
+            textViewTitle.setText(getString(R.string.title_step_final));
+            btnNext.setText(getString(R.string.action_finish));
         }
     }
 
@@ -275,11 +275,11 @@ public class RegistrationFragment extends Fragment {
 
         if (isGoogleUser) {
             if (wakeUpTime.isEmpty()) {
-                etWakeUpTime.setError("Выберите время пробуждения");
+                etWakeUpTime.setError(getString(R.string.error_select_wakeup_time));
                 return;
             }
             if (screenTimeGoalStr.isEmpty()) {
-                etScreenTimeGoal.setError("Введите цель");
+                etScreenTimeGoal.setError(getString(R.string.error_enter_goal));
                 return;
             }
             saveUserToFirestore(email, name, wakeUpTime, screenTimeGoalStr);
@@ -287,21 +287,21 @@ public class RegistrationFragment extends Fragment {
         }
 
         if (selectedWakeUpTime == null || selectedWakeUpTime.isEmpty()) {
-            etWakeUpTime.setError("Выберите время пробуждения");
+            etWakeUpTime.setError(getString(R.string.error_select_wakeup_time));
             return;
         }
         if (name.isEmpty()) {
-            etName.setError("Введите ваше имя");
+            etName.setError(getString(R.string.error_enter_name));
             return;
         }
         if (screenTimeGoalStr.isEmpty()) {
-            etScreenTimeGoal.setError("Введите цель");
+            etScreenTimeGoal.setError(getString(R.string.error_enter_goal));
             return;
         }
 
         int screenTimeGoal = Integer.parseInt(screenTimeGoalStr);
         if (screenTimeGoal < 1 || screenTimeGoal > 24) {
-            etScreenTimeGoal.setError("Цель от 1 до 24 часов");
+            etScreenTimeGoal.setError(getString(R.string.error_invalid_goal_range));
             return;
         }
 
@@ -328,25 +328,27 @@ public class RegistrationFragment extends Fragment {
 
                             db.collection("users").document(userId).set(userData)
                                     .addOnSuccessListener(aVoid -> {
-                                        Log.d("Registration", "Данные пользователя сохранены");
+                                        Log.d("Registration", getString(R.string.log_user_data_saved));
                                     })
                                     .addOnFailureListener(e -> {
-                                        Log.e("Registration", "Ошибка: " + e.getMessage());
+                                        Log.e("Registration", getString(R.string.error_with_message, e.getMessage()));
                                     });
                             showVerificationDialog(user);
                         }
                     } else {
-                        Toast.makeText(getActivity(), "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_with_message, task.getException().getMessage()), Toast.LENGTH_LONG).show();
                     }
                 });
     }
 
     private void showVerificationDialog(FirebaseUser user) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Подтвердите email");
-        builder.setMessage("Письмо отправлено на " + user.getEmail() +
-                "\n\nНажмите на ссылку в письме, затем вернитесь в приложение.");
-        builder.setPositiveButton("Я подтвердил", (dialog, which) -> {
+        builder.setTitle(getString(R.string.dialog_title_verify_email));
+
+        String dialogMessage = getString(R.string.dialog_message_verify_email, user.getEmail());
+        builder.setMessage(dialogMessage);
+
+        builder.setPositiveButton(getString(R.string.action_verified_confirm), (dialog, which) -> {
             user.reload().addOnCompleteListener(task -> {
                 if (user.isEmailVerified()) {
                     SharedPreferences prefs = requireActivity().getSharedPreferences("registration_prefs", Context.MODE_PRIVATE);
@@ -354,14 +356,14 @@ public class RegistrationFragment extends Fragment {
                     new FirstLaunchManager(getActivity()).setFirstLaunchDone();
                     ((MainActivity) getActivity()).goToHomeFragment();
                 } else {
-                    Toast.makeText(getActivity(), "Email ещё не подтверждён", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.toast_email_not_verified_yet), Toast.LENGTH_SHORT).show();
                     showVerificationDialog(user);
                 }
             });
         });
-        builder.setNegativeButton("Отправить снова", (dialog, which) -> {
+        builder.setNegativeButton(getString(R.string.action_resend_email), (dialog, which) -> {
             user.sendEmailVerification();
-            Toast.makeText(getActivity(), "Письмо отправлено повторно", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getString(R.string.toast_email_resent), Toast.LENGTH_SHORT).show();
             showVerificationDialog(user);
         });
         builder.setCancelable(false);
@@ -396,7 +398,7 @@ public class RegistrationFragment extends Fragment {
 
         db.collection("users").document(userId).set(userData)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("Registration", "Данные пользователя сохранены");
+                    Log.d("Registration", getString(R.string.log_user_data_saved));
                     SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
                     prefs.edit().remove("temp_email").remove("temp_name").remove("is_google_user").apply();
 
@@ -411,8 +413,8 @@ public class RegistrationFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("Registration", "Ошибка: " + e.getMessage());
-                    Toast.makeText(getActivity(), "Ошибка сохранения данных", Toast.LENGTH_LONG).show();
+                    Log.e("Registration", getString(R.string.error_with_message, e.getMessage()));
+                    Toast.makeText(getActivity(), getString(R.string.error_save_data_failed), Toast.LENGTH_LONG).show();
                 });
     }
 }

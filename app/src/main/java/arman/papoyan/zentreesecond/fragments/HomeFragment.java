@@ -147,7 +147,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             float motivation = prefs.getFloat("motivation", 1.0f);
             tree.addMinutes(30, x, motivation);
             updateTreeUI();
-            Toast.makeText(getActivity(), "Тест: +30 минут к росту", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), getString(R.string.toast_test_growth_added), Toast.LENGTH_LONG).show();
         });
         return view;
     }
@@ -206,10 +206,10 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
     private void requestUsageStatsPermission() {
         new AlertDialog.Builder(getActivity())
-                .setTitle("Разрешение на отслеживание экранного времени")
-                .setMessage("Для работы мотивационного коэффициента приложению нужен доступ к статистике использования. Вы можете включить его в настройках.")
-                .setPositiveButton("Открыть настройки", (dialog, which) -> startActivity(new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)))
-                .setNegativeButton("Отмена", null)
+                .setTitle(getString(R.string.dialog_permission_title))
+                .setMessage(getString(R.string.dialog_permission_message))
+                .setPositiveButton(getString(R.string.dialog_permission_positive), (dialog, which) -> startActivity(new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)))
+                .setNegativeButton(getString(R.string.dialog_cancel), null)
                 .show();
     }
 
@@ -277,7 +277,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         if (isFocusModeActive) {
             screenOffTime = System.currentTimeMillis();
             tree.startGrowth();
-            growthStatusText.setText("🌱 Дерево растёт (экран выключен)");
+            growthStatusText.setText(getString(R.string.status_tree_growing));
             growthStatusText.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_green));
             startGrowthUpdates();
         }
@@ -295,7 +295,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             tree.stopGrowth();
             treeManager.saveTree(tree);
             updateTreeUI();
-            growthStatusText.setText("⏸️ Рост на паузе (экран включён)");
+            growthStatusText.setText(getString(R.string.status_growth_paused));
             growthStatusText.setTextColor(Color.parseColor("#FF9800"));
             stopGrowthUpdates();
         }
@@ -361,10 +361,10 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private void updateTreeUI() {
         int totalMinutes = tree.getTotalMinutes();
         int progress = tree.getProgressPercentage();
-        treeLevelText.setText("Уровень " + tree.getLevel() + " • Стадия " + tree.getCurrentStage());
+        treeLevelText.setText(getString(R.string.tree_level_and_stage, tree.getLevel(), tree.getCurrentStage()));
         treeProgressBar.setProgress(progress);
-        textViewTime.setText((totalMinutes / 60) + " ч " + (totalMinutes % 60) + " мин");
-        textViewProgress.setText(progress + "%");
+        textViewTime.setText(getString(R.string.tree_formatted_time, totalMinutes / 60, totalMinutes % 60));
+        textViewProgress.setText(getString(R.string.tree_formatted_percentage, progress));
         updateTreeImage(tree.getCurrentStage());
         updateMotivationText();
     }

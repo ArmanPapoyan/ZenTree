@@ -68,7 +68,7 @@ public class FocusFragment extends Fragment {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (isBreakActive && !screenBlocker.isShowing()) {
-                        screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+                        screenBlocker.showBlocker(getString(R.string.blocker_break_message, selectedTimeMillis / 60000));
                     }
                     waitingForDialerReturn = false;
                 }
@@ -89,7 +89,7 @@ public class FocusFragment extends Fragment {
                     updateTimeButtons();
                     etCustomTime.setText("");
                 } else {
-                    Toast.makeText(getActivity(), "Введите число от 1 до 180", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.error_invalid_custom_time), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -144,11 +144,11 @@ public class FocusFragment extends Fragment {
         btnTime15.setVisibility(View.GONE);
         btnTime25.setVisibility(View.GONE);
         btnTime45.setVisibility(View.GONE);
-        tvStatus.setText("Отдыхаем... Не пользуйтесь телефоном");
+        tvStatus.setText(getString(R.string.status_resting));
         tvStatus.setTextColor(getResources().getColor(R.color.primary_green));
         startTimer(remaining);
         if (Settings.canDrawOverlays(requireContext())) {
-            screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+            screenBlocker.showBlocker(getString(R.string.blocker_break_message, selectedTimeMillis / 60000));
         }
         clearBreakState();
     }
@@ -208,11 +208,11 @@ public class FocusFragment extends Fragment {
         btnTime25.setVisibility(View.GONE);
         btnTime45.setVisibility(View.GONE);
 
-        tvStatus.setText("Отдыхаем... Не пользуйтесь телефоном");
+        tvStatus.setText(getString(R.string.status_resting));
         tvStatus.setTextColor(getResources().getColor(R.color.primary_green));
 
         if (android.provider.Settings.canDrawOverlays(requireContext())) {
-            screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) + " минут\nНе пользуйтесь телефоном");
+            screenBlocker.showBlocker(getString(R.string.blocker_break_message, selectedTimeMillis / 60000));
         }
 
         startTimer(selectedTimeMillis);
@@ -260,11 +260,11 @@ public class FocusFragment extends Fragment {
         int bonusMinutes = (int) (selectedTimeMillis / 60000);
         tree.addBonusMinutes(bonusMinutes);
         treeManager.saveTree(tree);
-        Toast.makeText(getActivity(), "🌳 +" + bonusMinutes + " минут к дереву!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), getString(R.string.toast_bonus_minutes, bonusMinutes), Toast.LENGTH_SHORT).show();
 
         updateTimeButtons();
         tvTimer.setText(String.format("%02d:%02d", selectedTimeMillis / 60000, 0));
-        tvStatus.setText("Отдых завершён! 🎉");
+        tvStatus.setText(getString(R.string.status_break_finished));
         tvStatus.setTextColor(getResources().getColor(R.color.text_secondary));
 
         isOpeningDialer = false;
@@ -290,7 +290,7 @@ public class FocusFragment extends Fragment {
 
         updateTimeButtons();
         tvTimer.setText(String.format("%02d:%02d", selectedTimeMillis / 60000, 0));
-        tvStatus.setText("Отдых прерван");
+        tvStatus.setText(getString(R.string.status_break_cancelled));
         tvStatus.setTextColor(getResources().getColor(R.color.text_secondary));
 
         isOpeningDialer = false;
@@ -319,8 +319,7 @@ public class FocusFragment extends Fragment {
                 if (screenBlocker.isShowing()) {
                     screenBlocker.setTransparent(false);
                 } else {
-                    screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) +
-                            " минут\nНе пользуйтесь телефоном");
+                    screenBlocker.showBlocker(getString(R.string.blocker_break_message, selectedTimeMillis / 60000));
                 }
             }
         }
@@ -344,8 +343,7 @@ public class FocusFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (isBreakActive && !screenBlocker.isShowing()) {
-            screenBlocker.showBlocker("Отдых " + (selectedTimeMillis / 60000) +
-                    " минут\nНе пользуйтесь телефоном");
+            screenBlocker.showBlocker(getString(R.string.blocker_break_message, selectedTimeMillis / 60000));
         }
     }
 }

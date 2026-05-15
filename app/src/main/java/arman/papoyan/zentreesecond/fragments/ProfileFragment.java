@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -34,6 +36,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.Locale;
+
 import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
 
@@ -47,7 +51,7 @@ public class ProfileFragment extends Fragment {
     private SharedPreferences themePrefs;
     private Button deleteButton;
     private Button btnThemeSystem, btnThemeLight, btnThemeDark;
-
+    private Button btnLangRussian, btnLangEnglish, btnLangArmenian;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
@@ -64,7 +68,13 @@ public class ProfileFragment extends Fragment {
         btnThemeSystem = view.findViewById(R.id.btn_theme_system);
         btnThemeLight = view.findViewById(R.id.btn_theme_light);
         btnThemeDark = view.findViewById(R.id.btn_theme_dark);
+        btnLangRussian = view.findViewById(R.id.btn_lang_russian);
+        btnLangEnglish = view.findViewById(R.id.btn_lang_english);
+        btnLangArmenian = view.findViewById(R.id.btn_lang_armenian);
 
+        btnLangRussian.setOnClickListener(v -> setLanguage("ru"));
+        btnLangEnglish.setOnClickListener(v -> setLanguage("en"));
+        btnLangArmenian.setOnClickListener(v -> setLanguage("hy"));
 
         displayUserInfo(user);
 
@@ -81,21 +91,38 @@ public class ProfileFragment extends Fragment {
         btnThemeDark.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_YES));
 
         deleteButton.setOnClickListener(v -> deleteAccount());
+        updateButtonHighlight();
         return view;
+    }
+
+    private void setLanguage(String languageCode) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        prefs.edit().putString("language", languageCode).apply();
+
+        Locale locale = new Locale(languageCode);
+        Locale.setDefault(locale);
+
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
+        requireActivity().recreate();
     }
     private void setThemeMode(int mode) {
         themePrefs.edit().putInt("night_mode", mode).apply();
         AppCompatDelegate.setDefaultNightMode(mode);
 
-        int currentNavId = 0;
         if (getActivity() instanceof MainActivity) {
-            currentNavId = ((MainActivity) getActivity()).getCurrentNavItemId();
+            int currentNavId = ((MainActivity) getActivity()).getCurrentNavItemId();
+            Intent intent = requireActivity().getIntent();
+            intent.putExtra("selected_nav_id", currentNavId);
         }
-        Intent intent = requireActivity().getIntent();
-        intent.putExtra("selected_nav_id", currentNavId);
+
         requireActivity().finish();
-        startActivity(intent);
+        startActivity(requireActivity().getIntent());
     }
+
     private void showPasswordDialog() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
@@ -105,21 +132,21 @@ public class ProfileFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         EditText passwordInput = new EditText(getActivity());
         passwordInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        passwordInput.setHint("Введите пароль");
+        passwordInput.setHint(getString(R.string.hint_enter_password));
         passwordInput.setPadding(40, 20, 40, 20);
 
-        builder.setTitle("Введите пароль")
+        builder.setTitle(getString(R.string.dialog_title_enter_password))
                 .setMessage(R.string.password_text)
                 .setView(passwordInput)
-                .setPositiveButton("Подтвердить", (dialog, which) -> {
+                .setPositiveButton(getString(R.string.action_confirm), (dialog, which) -> {
                     String password = passwordInput.getText().toString();
                     if (password.isEmpty()) {
-                        Toast.makeText(getActivity(), "Введите пароль", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), getString(R.string.hint_enter_password), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     reauthenticateUser(email, password);
                 })
-                .setNegativeButton("Отмена", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(getString(R.string.action_cancel), (dialog, which) -> dialog.dismiss())
                 .setCancelable(false);
 
         builder.show();
@@ -135,14 +162,14 @@ public class ProfileFragment extends Fragment {
                     showDeleteDialog();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getActivity(), "Неверный пароль: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), getString(R.string.error_invalid_password, e.getMessage()), Toast.LENGTH_LONG).show();
                 });
     }
     private void showDeleteDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Удалить аккаунт?")
+        builder.setTitle(getString(R.string.dialog_title_delete_account))
                 .setMessage(R.string.delete_text)
-                .setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.action_delete), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -151,7 +178,7 @@ public class ProfileFragment extends Fragment {
                         }
                         String userId = user.getUid();
                         ProgressDialog progressDialog = new ProgressDialog(getActivity());
-                        progressDialog.setMessage("Удаление аккаунта...");
+                        progressDialog.setMessage(getString(R.string.progress_deleting_account));
                         progressDialog.setCancelable(false);
                         progressDialog.show();
                         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -174,21 +201,21 @@ public class ProfileFragment extends Fragment {
                                                         })
                                                         .addOnFailureListener(e -> {
                                                             progressDialog.dismiss();
-                                                            Toast.makeText(getActivity(), "Ошибка удаления аккаунта: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                                            Toast.makeText(getActivity(), getString(R.string.error_delete_account_failed, e.getMessage()), Toast.LENGTH_LONG).show();
                                                         });
                                             })
                                             .addOnFailureListener(e -> {
                                                 progressDialog.dismiss();
-                                                Toast.makeText(getActivity(), "Ошибка удаления дерева: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                                Toast.makeText(getActivity(), getString(R.string.error_delete_tree_failed, e.getMessage()), Toast.LENGTH_LONG).show();
                                             });
                                 })
                                 .addOnFailureListener(e -> {
                                     progressDialog.dismiss();
-                                    Toast.makeText(getActivity(), "Не удалось получить задачи: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getActivity(), getString(R.string.error_fetch_tasks_failed, e.getMessage()), Toast.LENGTH_LONG).show();
                                 });
                     }
                 })
-                .setNegativeButton("Отмена", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(getString(R.string.action_cancel), (dialog, which) -> dialog.dismiss())
                 .setCancelable(false);
 
         AlertDialog dialog = builder.create();
@@ -203,14 +230,14 @@ public class ProfileFragment extends Fragment {
             if (displayName != null && !displayName.isEmpty()) {
                 textViewName.setText(displayName);
             } else {
-                textViewName.setText("Не указано");
+                textViewName.setText(getString(R.string.user_info_not_specified));
             }
         } else if (isGuest) {
-            textViewName.setText("Гость");
-            textViewEmail.setText("Гостевой режим");
+            textViewName.setText(getString(R.string.user_info_guest));
+            textViewEmail.setText(getString(R.string.user_info_guest_mode));
         } else {
-            textViewName.setText("Не авторизован");
-            textViewEmail.setText("Не авторизован");
+            textViewName.setText(getString(R.string.user_info_not_authorized));
+            textViewEmail.setText(getString(R.string.user_info_not_authorized));
             goToLoginFragment();
         }
     }
@@ -298,7 +325,7 @@ public class ProfileFragment extends Fragment {
         } else if (provider == AuthProvider.EMAIL_PASSWORD) {
             showPasswordDialog();
         } else {
-            Toast.makeText(getContext(), "Неизвестный тип аккаунта", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.error_unknown_account_type), Toast.LENGTH_SHORT).show();
         }
     }
     private void deleteGoogleAccount() {
@@ -306,12 +333,12 @@ public class ProfileFragment extends Fragment {
     }
     private void showDeleteDialogForGoogle() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Удалить аккаунт?")
+        builder.setTitle(getString(R.string.dialog_title_delete_account))
                 .setMessage(R.string.delete_text)
-                .setPositiveButton("Удалить", (dialog, which) -> {
+                .setPositiveButton(getString(R.string.action_delete), (dialog, which) -> {
                     performGoogleAccountDeletion();
                 })
-                .setNegativeButton("Отмена", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(getString(R.string.action_cancel), (dialog, which) -> dialog.dismiss())
                 .setCancelable(false);
 
         AlertDialog dialog = builder.create();
@@ -320,7 +347,7 @@ public class ProfileFragment extends Fragment {
     }
     private void performGoogleAccountDeletion() {
         ProgressDialog progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage("Удаление аккаунта...");
+        progressDialog.setMessage(getString(R.string.progress_deleting_account));
         progressDialog.setCancelable(false);
         progressDialog.show();
 
@@ -341,15 +368,15 @@ public class ProfileFragment extends Fragment {
                                         progressDialog.dismiss();
                                         if (revokeTask.isSuccessful()) {
                                             deleteUserDataFromFirestore();
-                                            Toast.makeText(getContext(), "Аккаунт удалён", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getContext(), getString(R.string.toast_account_deleted), Toast.LENGTH_SHORT).show();
                                             navigateToLogin();
                                         } else {
-                                            Toast.makeText(getContext(), "Ошибка при отзыве доступа Google", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getContext(), getString(R.string.error_google_revoke_failed), Toast.LENGTH_SHORT).show();
                                         }
                                     });
                         } else {
                             progressDialog.dismiss();
-                            Toast.makeText(getContext(), "Ошибка удаления: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), getString(R.string.error_delete_failed_with_msg, task.getException().getMessage()), Toast.LENGTH_SHORT).show();
                         }
                     });
         }
@@ -392,6 +419,36 @@ public class ProfileFragment extends Fragment {
                 .delete();
 
         db.collection("users").document(userId).delete();
+    }
+    private void updateButtonHighlight() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        String currentLang = prefs.getString("language", "ru");
+
+        resetButtonStyle(btnLangRussian);
+        resetButtonStyle(btnLangEnglish);
+        resetButtonStyle(btnLangArmenian);
+
+        switch (currentLang) {
+            case "ru":
+                setActiveButtonStyle(btnLangRussian);
+                break;
+            case "en":
+                setActiveButtonStyle(btnLangEnglish);
+                break;
+            case "hy":
+                setActiveButtonStyle(btnLangArmenian);
+                break;
+        }
+    }
+
+    private void resetButtonStyle(Button button) {
+        button.setBackgroundResource(R.drawable.outline_button);
+        button.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_green));
+    }
+
+    private void setActiveButtonStyle(Button button) {
+        button.setBackgroundResource(R.drawable.button_filled);
+        button.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
     }
 
 }

@@ -12,18 +12,19 @@
         android:id="@+id/text_view_new_day"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="🌱"
+        android:text="@string/emoji_sprout"
         android:textSize="80sp"
         android:alpha="0"
         android:scaleX="0.5"
         android:scaleY="0.5"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:contentDescription="@string/desc_new_day_emoji"/>
 
     <TextView
         android:id="@+id/text_view_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Новый День!"
+        android:text="@string/new_day_title"
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="@color/primary_green_dark"
@@ -34,7 +35,7 @@
         android:id="@+id/text_view_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Начни свой день с фокуса"
+        android:text="@string/new_day_message"
         android:textSize="16sp"
         android:textColor="#757575"
         android:alpha="0"/>

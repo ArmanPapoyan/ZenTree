@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Тип времени:"
+            android:text="@string/time_type_label"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"/>
@@ -28,26 +28,26 @@
                 android:id="@+id/radio_before"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="До указанного времени"
+                android:text="@string/time_type_before"
                 android:checked="true"/>
 
             <RadioButton
                 android:id="@+id/radio_at"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="В указанное время"/>
+                android:text="@string/time_type_at"/>
 
             <RadioButton
                 android:id="@+id/radio_after"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="После указанного времени"/>
+                android:text="@string/time_type_after"/>
 
             <RadioButton
                 android:id="@+id/radio_range"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Промежуток времени"/>
+                android:text="@string/time_type_range"/>
 
         </RadioGroup>
 
@@ -55,7 +55,7 @@
             android:id="@+id/text_view_start_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Начало:"
+            android:text="@string/time_start_label"
             android:textSize="14sp"
             android:layout_marginBottom="8dp"/>
 
@@ -70,7 +70,7 @@
             android:id="@+id/text_view_end_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Конец:"
+            android:text="@string/time_end_label"
             android:textSize="14sp"
             android:visibility="gone"
             android:layout_marginBottom="8dp"/>

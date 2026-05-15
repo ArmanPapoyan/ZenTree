@@ -44,10 +44,10 @@ public class TrackerForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Zen Tree — отслеживание экранного времени",
+                    getString(R.string.notification_channel_tracker_name),
                     NotificationManager.IMPORTANCE_LOW
             );
-            channel.setDescription("Помогает вовремя напоминать об отдыхе");
+            channel.setDescription(getString(R.string.notification_channel_tracker_description));
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
         }
@@ -58,8 +58,8 @@ public class TrackerForegroundService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Zen Tree")
-                .setContentText("Отслеживание экранного времени активно")
+                .setContentTitle(getString(R.string.notification_title_zen_tree))
+                .setContentText(getString(R.string.notification_text_tracker_active))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_LOW)

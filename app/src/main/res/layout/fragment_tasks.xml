@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Мои задачи"
+        android:text="@string/tasks_header_title"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="@color/primary_green_dark"
@@ -31,6 +31,7 @@
         android:layout_gravity="end|bottom"
         android:src="@android:drawable/ic_input_add"
         android:layout_margin="16dp"
+        android:contentDescription="@string/desc_add_task"
         app:backgroundTint="@color/primary_green"/>
 
 </LinearLayout>

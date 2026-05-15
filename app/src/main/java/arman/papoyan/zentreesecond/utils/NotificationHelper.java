@@ -14,7 +14,6 @@ import arman.papoyan.zentreesecond.R;
 
 public class NotificationHelper {
     private static final String CHANNEL_ID = "break_reminder_channel";
-    private static final String CHANNEL_NAME = "Напоминания об отдыхе";
     private static final int NOTIFICATION_ID = 1001;
 
     private Context context;
@@ -28,10 +27,10 @@ public class NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    CHANNEL_NAME,
+                    context.getString(R.string.notification_channel_break_name),
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Напоминание сделать перерыв после часа использования телефона");
+            channel.setDescription(context.getString(R.string.notification_channel_break_description));
 
             NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             manager.createNotificationChannel(channel);
@@ -52,8 +51,8 @@ public class NotificationHelper {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Пора отдохнуть!")
-                .setContentText("Вы используете телефон уже час. Сделайте перерыв 5 минут.")
+                .setContentTitle(context.getString(R.string.notification_title_break))
+                .setContentText(context.getString(R.string.notification_text_break))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);

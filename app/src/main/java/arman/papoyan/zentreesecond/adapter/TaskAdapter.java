@@ -1,5 +1,6 @@
 package arman.papoyan.zentreesecond.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,7 +94,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
             return true;
         });
-        String timeText = formatTimeText(currentTask);
+
+        String timeText = formatTimeText(holder.itemView.getContext(), currentTask);
         holder.textViewTime.setText(timeText);
 
         holder.textViewPriority.setText(String.valueOf(currentTask.getPriority()));
@@ -128,23 +130,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     }
 
-    private String formatTimeText(Task task) {
+    private String formatTimeText(Context context, Task task) {
         String timeString = "";
         String targetTime = String.format("%02d:%02d", task.getTargetHour(), task.getTargetMinute());
         String endTime = String.format("%02d:%02d", task.getEndHour(), task.getEndMinute());
 
         switch (task.getTimeType()) {
             case 1:
-                timeString = "До " + targetTime;
+                timeString = context.getString(R.string.task_time_before, targetTime);
                 break;
             case 2:
-                timeString = "В " + targetTime;
+                timeString = context.getString(R.string.task_time_at, targetTime);
                 break;
             case 3:
-                timeString = "После " + targetTime;
+                timeString = context.getString(R.string.task_time_after, targetTime);
                 break;
             case 4:
-                timeString = targetTime + " - " + endTime;
+                timeString = context.getString(R.string.task_time_range, targetTime, endTime);
                 break;
         }
         return timeString;

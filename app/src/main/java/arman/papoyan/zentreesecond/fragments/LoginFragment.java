@@ -73,7 +73,7 @@ public class LoginFragment extends Fragment {
             String password = editTextPassword.getText().toString().trim();
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(getActivity(), "Заполните все поля", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), getString(R.string.error_empty_fields), Toast.LENGTH_SHORT).show();
             } else {
                 mAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(getActivity(), task -> {
@@ -110,10 +110,10 @@ public class LoginFragment extends Fragment {
                                         }
                                     });
                                 } else {
-                                    Toast.makeText(getActivity(), "Подтвердите email", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getActivity(), getString(R.string.error_email_not_verified), Toast.LENGTH_SHORT).show();
                                 }
                             } else {
-                                Toast.makeText(getActivity(), "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(getActivity(), getString(R.string.error_with_message, task.getException().getMessage()), Toast.LENGTH_LONG).show();
                             }
                         });
             }
@@ -167,7 +167,7 @@ public class LoginFragment extends Fragment {
                             TreeModel newTree = new TreeModel();
                             TreeManager treeManager = new TreeManager(getActivity());
                             treeManager.saveTree(newTree);
-                            Toast.makeText(requireActivity(), "Вход как гость", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireActivity(), getString(R.string.toast_guest_logged_in), Toast.LENGTH_SHORT).show();
                             MainActivity activity = (MainActivity) getActivity();
                             if (activity != null) {
                                 activity.goToHomeAfterLogin();
@@ -176,7 +176,7 @@ public class LoginFragment extends Fragment {
                     } else {
                         Exception e = task.getException();
                         Log.e("AUTH_ERROR", e.getMessage());
-                        Toast.makeText(requireActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireActivity(), getString(R.string.error_with_message, e.getMessage()), Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -189,7 +189,7 @@ public class LoginFragment extends Fragment {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
-                Toast.makeText(getActivity(), "Ошибка входа: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), getString(R.string.error_google_sign_in, e.getMessage()), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -270,7 +270,7 @@ public class LoginFragment extends Fragment {
                         FirebaseUser user = mAuth.getCurrentUser();
                         checkUserInFirestore(user);
                     } else {
-                        Toast.makeText(getActivity(), "Ошибка аутентификации", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_auth_failed), Toast.LENGTH_LONG).show();
                     }
                 });
     }

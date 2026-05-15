@@ -52,7 +52,7 @@ public class FocusForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Фокус-режим",
+                    getString(R.string.notification_channel_focus_name),
                     NotificationManager.IMPORTANCE_LOW
             );
             NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -62,8 +62,8 @@ public class FocusForegroundService extends Service {
 
     private Notification createNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Zen Tree")
-                .setContentText("Фокус-режим активен. Дерево растёт, когда экран выключен.")
+                .setContentTitle(getString(R.string.notification_title_zen_tree))
+                .setContentText(getString(R.string.notification_text_focus_active))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();

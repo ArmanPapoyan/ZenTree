@@ -20,19 +20,24 @@
             android:id="@+id/view_completed_indicator"
             android:layout_width="6dp"
             android:layout_height="match_parent"
-            android:background="@color/default_indicator" />
+            android:background="@color/default_indicator"
+            android:contentDescription="@string/desc_task_completed_indicator" />
+
         <CheckBox
             android:id="@+id/checkbox_completed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/desc_task_checkbox" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp">
 
             <TextView
                 android:id="@+id/text_view_title"
@@ -70,7 +75,8 @@
             android:layout_marginStart="16dp"
             android:textColor="@color/text_primary"
             android:background="@drawable/rounded_corner_bottom_left"
-            />
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="16dp"/>
 
     </LinearLayout>
 

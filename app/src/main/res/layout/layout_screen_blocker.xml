@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#CC000000">
 
     <TextView
@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="Отдых 5 минут\nНе пользуйтесь телефоном"
+        android:text="@string/blocker_break_message"
         android:textColor="@android:color/white"
         android:textSize="24sp"
         android:gravity="center"
@@ -21,7 +21,7 @@
         android:id="@+id/btn_open_dialer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Открыть телефон"
+        android:text="@string/action_open_dialer"
         android:backgroundTint="@color/primary_green"
         android:textColor="@color/white"
         android:padding="12dp"

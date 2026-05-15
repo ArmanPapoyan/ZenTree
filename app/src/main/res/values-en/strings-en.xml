@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZenTree</string>
+    <string name="Q1">Every small effort leads to big changes 🌱</string>
+    <string name="Q2">Your focus is your strength 💪</string>
+    <string name="Q3">The tree grows together with you 🌳</string>
+    <string name="Q4">One step at a time, but always forward 🚶‍</string>
+    <string name="Q5">Today\'s seeds are tomorrow\'s forest 🌲</string>
+    <string name="Q6">Every minute of focus makes you stronger ⏰</string>
+    <string name="accessibility_service_description"> </string>
+    <string name="delete_text">Are you sure you want to delete your account? This action is irreversible — all your data, settings, and history will be permanently deleted.</string>
+    <string name="password_text">To continue, enter your account password. This is required to confirm that you are performing this action.</string>
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID</string>
+    <string name="tree">Tree</string>
+    <string name="Focus">Focus</string>
+    <string name="tasks">Tasks</string>
+    <string name="Stats">Statistics</string>
+    <string name="Profile">Profile</string>
+    <string name="task_time_before">Before %1$s</string>
+    <string name="task_time_at">At %1$s</string>
+    <string name="task_time_after">After %1$s</string>
+    <string name="task_time_range">%1$s - %2$s</string>
+    <string name="error_invalid_custom_time">Enter a number from 1 to 180</string>
+    <string name="status_resting">Resting... Do not use your phone</string>
+    <string name="status_break_finished">Break finished 🎉</string>
+    <string name="status_break_cancelled">Break cancelled</string>
+    <string name="toast_bonus_minutes">🌳 +%1$d minutes added to tree!</string>
+    <string name="blocker_break_message">Break %1$d minutes Do not use your phone</string>
+    <string name="toast_test_growth_added">Test: +30 minutes growth</string>
+    <string name="dialog_permission_title">Screen time tracking permission</string>
+    <string name="dialog_permission_message">The app needs access to usage statistics for motivation tracking. You can enable it in settings.</string>
+    <string name="dialog_permission_positive">Open settings</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="status_tree_growing">🌱 Tree is growing (screen off)</string>
+    <string name="status_growth_paused">⏸️ Growth paused (screen on)</string>
+    <string name="tree_level_and_stage">Level %1$d • Stage %2$d</string>
+    <string name="tree_formatted_time">%1$d h %2$d min</string>
+    <string name="tree_formatted_percentage">%1$d%%</string>
+    <string name="error_empty_fields">Fill in all fields</string>
+    <string name="error_email_not_verified">Verify email</string>
+    <string name="error_with_message">Error: %1$s</string>
+    <string name="error_google_sign_in">Login error: %1$s</string>
+    <string name="error_auth_failed">Authentication error</string>
+    <string name="toast_guest_logged_in">Logged in as guest</string>
+    <string name="hint_enter_password">Enter password</string>
+    <string name="dialog_title_enter_password">Enter password</string>
+    <string name="notification_title_zen_tree">Zen Tree</string>
+    <string name="dialog_title_delete_account">Delete account?</string>
+    <string name="desc_profile_avatar">User profile avatar</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_done">Done</string>
+    <string name="action_cancel">Cancel</string>
+
+    <string name="action_delete">Delete</string>
+
+    <string name="progress_deleting_account">Deleting account…</string>
+
+    <string name="user_info_not_specified">Not specified</string>
+
+    <string name="user_info_guest">Guest</string>
+
+    <string name="user_info_guest_mode">Guest mode</string>
+
+    <string name="user_info_not_authorized">Not authorized</string>
+
+    <string name="toast_account_deleted">Account deleted</string>
+
+    <string name="error_invalid_password">Invalid password: %1$s</string>
+
+    <string name="error_delete_account_failed">Account deletion error: %1$s</string>
+
+    <string name="error_delete_tree_failed">Tree deletion error: %1$s</string>
+
+    <string name="error_fetch_tasks_failed">Failed to load tasks: %1$s</string>
+
+    <string name="error_unknown_account_type">Unknown account type</string>
+
+    <string name="error_google_revoke_failed">Google revoke failed</string>
+
+    <string name="error_delete_failed_with_msg">Delete error: %1$s</string>
+
+    <string name="title_step_email">Your email</string>
+
+    <string name="title_step_password">Create a password</string>
+
+    <string name="title_step_final">Almost ready!</string>
+
+    <string name="action_finish">Finish</string>
+
+    <string name="action_verified_confirm">I have confirmed</string>
+
+    <string name="action_resend_email">Resend</string>
+
+    <string name="error_invalid_email">Enter valid email</string>
+
+    <string name="error_password_too_short">Minimum 6 characters</string>
+
+    <string name="error_passwords_dont_match">Passwords do not match</string>
+
+    <string name="error_select_wakeup_time">Select wake-up time</string>
+
+    <string name="error_enter_name">Enter your name</string>
+
+    <string name="error_enter_goal">Enter goal</string>
+
+    <string name="error_invalid_goal_range">Goal must be between 1 and 24 hours</string>
+
+    <string name="toast_google_data_loaded">Google data loaded. Fill in remaining fields.</string>
+
+    <string name="toast_email_not_verified_yet">Email not verified yet</string>
+
+    <string name="toast_email_resent">Email resent</string>
+
+    <string name="dialog_title_verify_email">Verify email</string>
+
+    <string name="dialog_message_verify_email">Email sent to %1$s. Click the link in the email, then return to the app.</string>
+
+    <string name="error_sign_in_failed">Login error: %1$s</string>
+
+    <string name="error_save_data_failed">Data save error</string>
+
+    <string name="log_user_data_saved">User data saved</string>
+
+    <string name="title_statistics_screen">Statistics screen</string>
+
+    <string name="error_sign_in_required">Sign in required</string>
+
+    <string name="error_sync_failed">Sync error</string>
+
+    <string name="error_load_failed">Load error: %1$s</string>
+
+    <string name="dialog_title_new_task">New task</string>
+
+    <string name="action_add">Add</string>
+
+    <string name="error_enter_title">Enter title</string>
+
+    <string name="error_past_date_invalid">Cannot select past date</string>
+
+    <string name="toast_task_added">Task added</string>
+
+    <string name="dialog_title_select_time">Select time</string>
+
+    <string name="time_prefix_before">Before %1$s</string>
+
+    <string name="time_prefix_at">At %1$s</string>
+
+    <string name="time_prefix_after">After %1$s</string>
+
+    <string name="time_range_format">%1$s - %2$s</string>
+
+    <string name="date_prefix">Date: %1$s</string>
+
+    <string name="dialog_title_delete_task">Delete task</string>
+
+    <string name="dialog_message_delete_confirm">Are you sure you want to delete "%1$s"?</string>
+
+    <string name="action_yes">Yes</string>
+
+    <string name="toast_task_deleted">Task deleted</string>
+
+    <string name="error_delete_failed">Delete error</string>
+
+    <string name="dialog_title_edit_task">Edit task</string>
+
+    <string name="action_save">Save</string>
+
+    <string name="toast_task_updated">Task updated</string>
+
+    <string name="notification_channel_name">Task reminders</string>
+
+    <string name="notification_channel_description">Task reminders</string>
+
+    <string name="notification_title_task_reminder">Task reminder</string>
+
+    <string name="priority_high_emoji">🔴 High priority</string>
+
+    <string name="priority_medium_emoji">🟡 Medium priority</string>
+
+    <string name="priority_low_emoji">🟢 Low priority</string>
+
+    <string name="notification_channel_focus_name">Focus mode</string>
+
+    <string name="notification_text_focus_active">Focus mode is active. The tree grows when the screen is off.</string>
+
+    <string name="notification_channel_tracker_name">Zen Tree — screen tracking</string>
+
+    <string name="notification_channel_tracker_description">Helps remind you to take breaks</string>
+
+    <string name="notification_text_tracker_active">Screen tracking active</string>
+
+    <string name="notification_channel_break_name">Break reminders</string>
+
+    <string name="notification_channel_break_description">Reminder to take a break after one hour of phone use</string>
+
+    <string name="notification_title_break">Time to rest!</string>
+
+    <string name="notification_text_break">You have been using your phone for one hour. Take a 5 minute break.</string>
+
+    <string name="loading">Loading…</string>
+
+    <string name="settings_theme_title">Theme</string>
+
+    <string name="theme_system">System</string>
+
+    <string name="theme_light">Light</string>
+
+    <string name="theme_dark">Dark</string>
+
+    <string name="settings_language_title">Language</string>
+
+    <string name="lang_russian">Russian</string>
+
+    <string name="lang_english">English</string>
+
+    <string name="lang_armenian">Armenian</string>
+
+    <string name="action_logout">Logout</string>
+
+    <string name="stats_section_title">Statistics</string>
+
+    <string name="stats_streak_label">Streak days</string>
+
+    <string name="stats_total_hours_label">Total hours</string>
+
+    <string name="action_delete_account">Delete account</string>
+
+    <string name="tasks_header_title">My tasks</string>
+
+    <string name="desc_add_task">Add new task</string>
+
+    <string name="time_type_label">Time type:</string>
+
+    <string name="time_type_before">Before time</string>
+
+    <string name="time_type_at">At time</string>
+
+    <string name="time_type_after">After time</string>
+
+    <string name="time_type_range">Time range</string>
+
+    <string name="time_start_label">Start:</string>
+
+    <string name="time_end_label">End:</string>
+
+    <string name="action_open_dialer">Open phone</string>
+
+    <string name="hint_task_title">Task title</string>
+
+    <string name="hint_task_description">Description (optional)</string>
+
+    <string name="label_task_priority">Priority (1 - highest)</string>
+
+    <string name="priority_1">1</string>
+
+    <string name="priority_2">2</string>
+
+    <string name="priority_3">3</string>
+
+    <string name="action_select_time">Select time</string>
+
+    <string name="status_time_not_selected">Time not selected</string>
+
+    <string name="action_select_date">Select date</string>
+
+    <string name="status_date_not_selected">Date not selected (today)</string>
+
+    <string name="time_preset_5">5</string>
+
+    <string name="time_preset_15">15</string>
+
+    <string name="time_preset_25">25</string>
+
+    <string name="time_preset_45">45</string>
+
+    <string name="hint_minutes_short">min</string>
+
+    <string name="action_set_time">Set</string>
+
+    <string name="default_timer_value">05:00</string>
+
+    <string name="status_select_break_time">Select break time</string>
+
+    <string name="action_start_break">Start break</string>
+
+    <string name="emoji_sprout">🌱</string>
+
+    <string name="new_day_title">New Day!</string>
+
+    <string name="new_day_message">Start your day with focus</string>
+
+    <string name="desc_new_day_emoji">Sprout icon symbolizing a new day</string>
+
+    <string name="registration_title">Registration</string>
+
+    <string name="hint_email">Email</string>
+
+    <string name="hint_create_password">Create password</string>
+
+    <string name="hint_confirm_password">Confirm password</string>
+
+    <string name="hint_user_name">What is your name?</string>
+
+    <string name="hint_current_screen_time">How many hours do you use your phone daily?</string>
+
+    <string name="label_wake_up_time">Wake-up time</string>
+
+    <string name="hint_select_time_placeholder">Select time</string>
+
+    <string name="action_select_short">Select</string>
+
+    <string name="label_screen_time_goal">Screen time goal (hours)</string>
+
+    <string name="hint_screen_time_goal_example">Example: 6</string>
+
+    <string name="action_next">Next</string>
+
+    <string name="action_sign_up_google">Sign up with Google</string>
+
+    <string name="action_go_to_login">Already have an account? Login</string>
+
+    <string name="tree_title">Your Tree</string>
+
+    <string name="tree_initial_level">Level 1 • Stage 1</string>
+
+    <string name="growth_status_idle">💤 Focus mode off</string>
+
+    <string name="action_test">Test</string>
+
+    <string name="motivation_initial">Start your mindful journey</string>
+
+    <string name="time_initial_value">0 h 0 min</string>
+
+    <string name="progress_initial_value">0%</string>
+
+    <string name="desc_tree_image">Current state of your tree</string>
+
+    <string name="desc_tree_growth_overlay">Tree growth animation effect</string>
+
+    <string name="desc_task_completed_indicator">Task completion indicator</string>
+
+    <string name="desc_task_checkbox">Task checkbox</string>
+
+</resources>

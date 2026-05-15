@@ -13,7 +13,7 @@
             android:id="@+id/edit_text_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Название задачи"
+            android:hint="@string/hint_task_title"
             android:inputType="text"
             android:layout_marginBottom="16dp"/>
 
@@ -21,14 +21,14 @@
             android:id="@+id/edit_text_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Описание (необязательно)"
+            android:hint="@string/hint_task_description"
             android:inputType="text"
             android:layout_marginBottom="16dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Приоритет (1 - самый важный):"
+            android:text="@string/label_task_priority"
             android:textSize="14sp"
             android:textColor="#757575"
             android:layout_marginBottom="8dp"/>
@@ -45,7 +45,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="1"
+                android:text="@string/priority_1"
                 android:textAlignment="center"
                 android:checked="true"/>
 
@@ -54,7 +54,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="2"
+                android:text="@string/priority_2"
                 android:textAlignment="center"/>
 
             <RadioButton
@@ -62,7 +62,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="3"
+                android:text="@string/priority_3"
                 android:textAlignment="center"/>
 
         </RadioGroup>
@@ -71,7 +71,7 @@
             android:id="@+id/button_select_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Выбрать время"
+            android:text="@string/action_select_time"
             android:backgroundTint="@color/primary_green"
             android:layout_marginBottom="16dp"/>
 
@@ -79,22 +79,23 @@
             android:id="@+id/text_view_selected_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Время не выбрано"
+            android:text="@string/status_time_not_selected"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="16dp"/>
+
         <Button
             android:id="@+id/button_select_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Выбрать дату"
+            android:text="@string/action_select_date"
             android:layout_marginTop="8dp"/>
 
         <TextView
             android:id="@+id/text_view_selected_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Дата не выбрана (сегодня)"
+            android:text="@string/status_date_not_selected"
             android:textSize="12sp"
             android:padding="8dp"/>
     </LinearLayout>

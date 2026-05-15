@@ -44,6 +44,7 @@ import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.adapter.TaskAdapter;
 import arman.papoyan.zentreesecond.models.Task;
 import arman.papoyan.zentreesecond.utils.SyncQueueManager;
+import arman.papoyan.zentreesecond.utils.TaskNotificationScheduler;
 
 public class TasksFragment extends Fragment {
 
@@ -79,7 +80,7 @@ public class TasksFragment extends Fragment {
             userId = currentUser.getUid();
             loadTasksFromFirestore();
         } else {
-            Toast.makeText(getActivity(), "Войдите в аккаунт", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getString(R.string.error_sign_in_required), Toast.LENGTH_SHORT).show();
             return view;
         }
 
@@ -122,7 +123,7 @@ public class TasksFragment extends Fragment {
                     .addOnFailureListener(e -> {
                         task.setCompleted(!isChecked);
                         adapter.notifyDataSetChanged();
-                        Toast.makeText(getActivity(), "Ошибка синхронизации", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_sync_failed), Toast.LENGTH_SHORT).show();
                     });
         });
 
@@ -151,7 +152,7 @@ public class TasksFragment extends Fragment {
                         if (error.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
                             return;
                         }
-                        Toast.makeText(getActivity(), "Ошибка загрузки: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_load_failed, error.getMessage()), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -203,8 +204,8 @@ public class TasksFragment extends Fragment {
         buttonSelectTime.setOnClickListener(v -> showTimePickerDialog(textViewSelectedTime));
         buttonSelectDate.setOnClickListener(v -> showDatePickerDialog(textViewSelectedDate));
 
-        builder.setTitle("Новая задача")
-                .setPositiveButton("Добавить", (dialog, which) -> {
+        builder.setTitle(getString(R.string.dialog_title_new_task))
+                .setPositiveButton(getString(R.string.action_add), (dialog, which) -> {
                     String title = editTextTitle.getText().toString().trim();
                     String description = editTextDescription.getText().toString().trim();
                     int priority = 1;
@@ -217,11 +218,11 @@ public class TasksFragment extends Fragment {
                     }
 
                     if (title.isEmpty()) {
-                        Toast.makeText(getActivity(), "Введите название", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_enter_title), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (selectedDate != null && selectedDate.compareTo(today) < 0) {
-                        Toast.makeText(getActivity(), "Нельзя выбрать прошедшую дату", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_past_date_invalid), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (selectedDate == null) {
@@ -243,13 +244,14 @@ public class TasksFragment extends Fragment {
                             .collection("userTasks").document(taskId)
                             .set(newTask)
                             .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(getActivity(), "Задача добавлена", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), getString(R.string.toast_task_added), Toast.LENGTH_SHORT).show();
+                                scheduleTaskNotification(newTask);
                             })
                             .addOnFailureListener(e -> {
-                                Toast.makeText(getActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), getString(R.string.error_with_message, e.getMessage()), Toast.LENGTH_SHORT).show();
                             });
                 })
-                .setNegativeButton("Отмена", null);
+                .setNegativeButton(getString(R.string.action_cancel), null);
 
         builder.create().show();
     }
@@ -284,8 +286,8 @@ public class TasksFragment extends Fragment {
             }
         });
 
-        builder.setTitle("Выберите время")
-                .setPositiveButton("Готово", (dialog, which) -> {
+        builder.setTitle(getString(R.string.dialog_title_select_time))
+                .setPositiveButton(getString(R.string.action_done), (dialog, which) -> {
                     int selectedId = radioGroupTimeType.getCheckedRadioButtonId();
 
                     selectedTargetHour = timePickerStart.getHour();
@@ -305,7 +307,7 @@ public class TasksFragment extends Fragment {
 
                     updateSelectedTimeText(textViewSelectedTime);
                 })
-                .setNegativeButton("Отмена", null);
+                .setNegativeButton(getString(R.string.action_cancel), null);
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -324,16 +326,16 @@ public class TasksFragment extends Fragment {
 
         switch (selectedTimeType) {
             case 1:
-                timeText = "До " + targetTime;
+                timeText = getString(R.string.time_prefix_before, targetTime);
                 break;
             case 2:
-                timeText = "В " + targetTime;
+                timeText = getString(R.string.time_prefix_at, targetTime);
                 break;
             case 3:
-                timeText = "После " + targetTime;
+                timeText = getString(R.string.time_prefix_after, targetTime);
                 break;
             case 4:
-                timeText = targetTime + " - " + endTime;
+                timeText = getString(R.string.time_range_format, targetTime, endTime);
                 break;
         }
         textView.setText(timeText);
@@ -345,7 +347,7 @@ public class TasksFragment extends Fragment {
         DatePickerDialog datePicker = new DatePickerDialog(getActivity(),
                 (view, year, month, dayOfMonth) -> {
                     selectedDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month+1, dayOfMonth);
-                    textView.setText("Дата: " + selectedDate);
+                    textView.setText(getString(R.string.date_prefix, selectedDate));
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -367,12 +369,12 @@ public class TasksFragment extends Fragment {
                 Task taskToDelete = taskList.get(position);
 
                 new AlertDialog.Builder(getActivity())
-                        .setTitle("Удалить задачу")
-                        .setMessage("Вы уверены, что хотите удалить \"" + taskToDelete.getTitle() + "\"?")
-                        .setPositiveButton("Да", (dialog, which) -> {
+                        .setTitle(getString(R.string.dialog_title_delete_task))
+                        .setMessage(getString(R.string.dialog_message_delete_confirm, taskToDelete.getTitle()))
+                        .setPositiveButton(getString(R.string.action_yes), (dialog, which) -> {
                             deleteTask(taskToDelete, position);
                         })
-                        .setNegativeButton("Отмена", (dialog, which) -> {
+                        .setNegativeButton(getString(R.string.action_cancel), (dialog, which) -> {
                             adapter.notifyItemChanged(position);
                         })
                         .show();
@@ -382,17 +384,127 @@ public class TasksFragment extends Fragment {
         itemTouchHelper.attachToRecyclerView(recyclerView);
     }
     private void deleteTask(Task task, int position) {
+        TaskNotificationScheduler.cancelTaskNotification(getContext(), task);
+
         db.collection("tasks").document(userId)
                 .collection("userTasks").document(task.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getActivity(), "Задача удалена", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.toast_task_deleted), Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getActivity(), "Ошибка удаления", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.error_delete_failed), Toast.LENGTH_SHORT).show();
                     adapter.notifyItemChanged(position);
                 });
     }
+    private void scheduleTaskNotification(Task task) {
+        Log.d("TasksFragment", "=== scheduleTaskNotification START ===");
+        if (getContext() == null) {
+            Log.d("TasksFragment", "getContext() == null, возврат");
+            return;
+        }
+
+        long notificationTime = calculateNotificationTime(task);
+        Log.d("TasksFragment", "Итоговое notificationTime: " + notificationTime);
+
+        if (notificationTime > 0 && notificationTime > System.currentTimeMillis()) {
+            task.setNotificationTime(notificationTime);
+            task.setNotificationEnabled(true);
+            task.setNotificationSent(false);
+
+            Log.d("TasksFragment", "ВЫЗЫВАЕМ TaskNotificationScheduler.scheduleTaskNotification");
+            TaskNotificationScheduler.scheduleTaskNotification(getContext(), task);
+
+            db.collection("tasks").document(userId)
+                    .collection("userTasks").document(task.getId())
+                    .update("notificationEnabled", true, "notificationTime", notificationTime, "notificationSent", false)
+                    .addOnSuccessListener(aVoid -> Log.d("TasksFragment", "Firestore обновлён"))
+                    .addOnFailureListener(e -> Log.e("TasksFragment", "Ошибка обновления Firestore", e));
+        } else {
+            Log.d("TasksFragment", "notificationTime = " + notificationTime + ", текущее время = " + System.currentTimeMillis());
+            Log.d("TasksFragment", "Уведомление НЕ запланировано");
+        }
+    }
+    private long calculateNotificationTime(Task task) {
+        try {
+            Log.d("TasksFragment", "=== calculateNotificationTime ===");
+            Log.d("TasksFragment", "Task title: " + task.getTitle());
+            Log.d("TasksFragment", "Task targetDate: " + task.getTargetDate());
+            Log.d("TasksFragment", "Task timeType: " + task.getTimeType());
+            Log.d("TasksFragment", "Task targetHour: " + task.getTargetHour());
+            Log.d("TasksFragment", "Task targetMinute: " + task.getTargetMinute());
+            Log.d("TasksFragment", "Task endHour: " + task.getEndHour());
+            Log.d("TasksFragment", "Task endMinute: " + task.getEndMinute());
+
+            long deadlineTime = 0;
+
+            switch (task.getTimeType()) {
+                case 1:
+                case 2:
+                case 3:
+                    String timeStr = String.format("%02d:%02d", task.getTargetHour(), task.getTargetMinute());
+                    deadlineTime = parseDateTime(task.getTargetDate(), timeStr);
+                    Log.d("TasksFragment", "deadlineTime (target): " + deadlineTime + " = " + new Date(deadlineTime));
+                    break;
+                case 4:
+                    long startTime = parseDateTime(task.getTargetDate(),
+                            String.format("%02d:%02d", task.getTargetHour(), task.getTargetMinute()));
+                    long endTime = parseDateTime(task.getTargetDate(),
+                            String.format("%02d:%02d", task.getEndHour(), task.getEndMinute()));
+                    deadlineTime = startTime + (endTime - startTime) / 2;
+                    Log.d("TasksFragment", "startTime: " + startTime);
+                    Log.d("TasksFragment", "endTime: " + endTime);
+                    Log.d("TasksFragment", "deadlineTime (mid): " + deadlineTime + " = " + new Date(deadlineTime));
+                    break;
+            }
+
+            if (deadlineTime == 0) {
+                Log.d("TasksFragment", "deadlineTime = 0, возвращаем 0");
+                return 0;
+            }
+
+            long notificationTime = 0;
+            switch (task.getTimeType()) {
+                case 1:
+                    notificationTime = deadlineTime - 30 * 60 * 1000;
+                    Log.d("TasksFragment", "Тип 'До', уведомление за 30 минут: " + notificationTime + " = " + new Date(notificationTime));
+                    break;
+                case 2:
+                    notificationTime = deadlineTime;
+                    Log.d("TasksFragment", "Тип 'В', уведомление в время: " + notificationTime + " = " + new Date(notificationTime));
+                    break;
+                case 3:
+                    notificationTime = deadlineTime + 15 * 60 * 1000;
+                    Log.d("TasksFragment", "Тип 'После', уведомление через 15 минут: " + notificationTime + " = " + new Date(notificationTime));
+                    break;
+                case 4:
+                    notificationTime = deadlineTime;
+                    Log.d("TasksFragment", "Тип 'Промежуток', уведомление в середине: " + notificationTime + " = " + new Date(notificationTime));
+                    break;
+            }
+
+            Log.d("TasksFragment", "Текущее время: " + System.currentTimeMillis() + " = " + new Date());
+
+            if (notificationTime <= System.currentTimeMillis()) {
+                Log.d("TasksFragment", "⚠️ Время уведомления в прошлом! Не планируем.");
+                return 0;
+            }
+
+            return notificationTime;
+        } catch (Exception e) {
+            Log.e("TasksFragment", "Ошибка расчета", e);
+            return 0;
+        }
+    }
+    private long parseDateTime(String date, String time) throws Exception {
+        String dateTimeString = date + " " + time;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        Date dateObj = sdf.parse(dateTimeString);
+        Log.d("TasksFragment", "parseDateTime: " + dateTimeString + " -> " + (dateObj != null ? dateObj.getTime() : 0));
+        return dateObj != null ? dateObj.getTime() : 0;
+    }
+
+
     private void showEditTaskDialog(Task task) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getLayoutInflater();
@@ -429,8 +541,8 @@ public class TasksFragment extends Fragment {
 
         buttonSelectTime.setOnClickListener(v -> showTimePickerDialog(textViewSelectedTime));
 
-        builder.setTitle("Редактировать задачу")
-                .setPositiveButton("Сохранить", (dialog, which) -> {
+        builder.setTitle(getString(R.string.dialog_title_edit_task))
+                .setPositiveButton(getString(R.string.action_save), (dialog, which) -> {
                     String title = editTextTitle.getText().toString().trim();
                     String description = editTextDescription.getText().toString().trim();
                     int priority = 1;
@@ -441,7 +553,7 @@ public class TasksFragment extends Fragment {
                         priority = 3;
                     }
                     if (title.isEmpty()) {
-                        Toast.makeText(getActivity(), "Введите название", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), getString(R.string.error_enter_title), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     task.setTitle(title);
@@ -457,14 +569,15 @@ public class TasksFragment extends Fragment {
                             .collection("userTasks").document(task.getId())
                             .set(task)
                             .addOnSuccessListener(aVoid -> {
-                                Toast.makeText(getActivity(), "Задача обновлена", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), getString(R.string.toast_task_updated), Toast.LENGTH_SHORT).show();
+                                TaskNotificationScheduler.cancelTaskNotification(getContext(), task);
+                                scheduleTaskNotification(task);
                             })
                             .addOnFailureListener(e -> {
-                                Toast.makeText(getActivity(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getActivity(), getString(R.string.error_with_message, e.getMessage()), Toast.LENGTH_SHORT).show();
                             });
                 })
-                .setNegativeButton("Отмена", null);
-
+                .setNegativeButton(getString(R.string.action_cancel), null);
         builder.create().show();
     }
     public void syncPendingTasks() {

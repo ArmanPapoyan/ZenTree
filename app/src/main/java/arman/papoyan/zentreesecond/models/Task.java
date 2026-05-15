@@ -13,7 +13,9 @@ public class Task {
     private int endHour;
     private int endMinute;
     private String targetDate;
-
+    private boolean notificationEnabled;
+    private long notificationTime;
+    private boolean notificationSent;
     public Task() {
 
     }
@@ -32,6 +34,15 @@ public class Task {
         this.createdAt = System.currentTimeMillis();
         this.completed = false;
     }
+    public boolean isNotificationEnabled() { return notificationEnabled; }
+    public void setNotificationEnabled(boolean notificationEnabled) { this.notificationEnabled = notificationEnabled; }
+
+    public long getNotificationTime() { return notificationTime; }
+    public void setNotificationTime(long notificationTime) { this.notificationTime = notificationTime; }
+
+    public boolean isNotificationSent() { return notificationSent; }
+    public void setNotificationSent(boolean notificationSent) { this.notificationSent = notificationSent; }
+
     public String getTargetDate() { return targetDate; }
     public void setTargetDate(String targetDate) { this.targetDate = targetDate; }
 

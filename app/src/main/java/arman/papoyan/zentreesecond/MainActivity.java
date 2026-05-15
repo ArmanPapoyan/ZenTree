@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
@@ -32,6 +33,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
+import java.util.Locale;
 
 import arman.papoyan.zentreesecond.fragments.FocusFragment;
 import arman.papoyan.zentreesecond.fragments.HomeFragment;
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isOnline = true;
     private Handler returnCheckHandler = new Handler();
     private Runnable returnCheckRunnable;
+    private static final String KEY_NAV_ITEM = "current_nav_item";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,8 +73,21 @@ public class MainActivity extends AppCompatActivity {
         int nightMode = themePrefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         AppCompatDelegate.setDefaultNightMode(nightMode);
 
+        loadSavedLanguage();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (savedInstanceState != null) {
+            currentNavItemId = savedInstanceState.getInt(KEY_NAV_ITEM, R.id.nav_home);
+        } else {
+            int savedNavId = getIntent().getIntExtra("selected_nav_id", -1);
+            if (savedNavId != -1) {
+                currentNavItemId = savedNavId;
+                getIntent().removeExtra("selected_nav_id");
+            }
+        }
+
         checkOverlayPermission();
         checkUsageStatsPermission();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -80,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         bottomNav = findViewById(R.id.bottom_navigation);
+        updateNavbarText();
+
+        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
 
         getApplication().registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
@@ -118,8 +137,8 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(currentFragment, false);
             return;
         }
+
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
         boolean isGuest = prefs.getBoolean("is_guest", false);
 
         if (isGuest || currentUser != null) {
@@ -141,8 +160,27 @@ public class MainActivity extends AppCompatActivity {
             currentFragment = new LoginFragment();
             loadFragment(currentFragment, false);
         }
-
     }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_NAV_ITEM, currentNavItemId);
+    }
+    private void loadSavedLanguage() {
+        SharedPreferences prefs = getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        String languageCode = prefs.getString("language", "ru");
+
+        Locale locale = new Locale(languageCode);
+        Locale.setDefault(locale);
+
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
+        updateNavbarText();
+    }
+
     private void syncPendingData() {
         TreeManager treeManager = new TreeManager(this);
         treeManager.syncPendingTree();
@@ -150,6 +188,15 @@ public class MainActivity extends AppCompatActivity {
         if (tasksFragment instanceof TasksFragment) {
             ((TasksFragment) tasksFragment).syncPendingTasks();
         }
+    }
+    private void updateNavbarText() {
+        if (bottomNav == null) return;
+
+        bottomNav.getMenu().findItem(R.id.nav_home).setTitle(R.string.tree);
+        bottomNav.getMenu().findItem(R.id.nav_tasks).setTitle(R.string.tasks);
+        bottomNav.getMenu().findItem(R.id.nav_focus).setTitle(R.string.Focus);
+        bottomNav.getMenu().findItem(R.id.nav_stats).setTitle(R.string.Stats);
+        bottomNav.getMenu().findItem(R.id.nav_profile).setTitle(R.string.Profile);
     }
     private void startReturnChecker() {
         if (returnCheckRunnable != null) return;

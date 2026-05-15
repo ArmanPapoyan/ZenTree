@@ -14,7 +14,9 @@ public class StatisticsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_statistics, container, false);
         TextView textView = view.findViewById(R.id.text_statistics);
-        textView.setText("Экран статистики");
+
+        textView.setText(getString(R.string.title_statistics_screen));
+
         return view;
     }
 }
