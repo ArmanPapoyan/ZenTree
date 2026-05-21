@@ -43,7 +43,7 @@ import arman.papoyan.zentreesecond.fragments.ProfileFragment;
 import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
-import arman.papoyan.zentreesecond.receivers.TaskNotificationReceiver;
+import arman.papoyan.zentreesecond.utils.TaskNotificationReceiver;
 import arman.papoyan.zentreesecond.services.TrackerForegroundService;
 import arman.papoyan.zentreesecond.utils.NotificationCleaner;
 import arman.papoyan.zentreesecond.utils.SyncHelper;

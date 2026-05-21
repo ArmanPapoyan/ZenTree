@@ -34,7 +34,6 @@ import androidx.work.WorkManager;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserInfo;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
@@ -46,6 +45,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import arman.papoyan.zentreesecond.R;
+import arman.papoyan.zentreesecond.models.FocusStats;
 import arman.papoyan.zentreesecond.models.TreeModel;
 import arman.papoyan.zentreesecond.services.TrackerForegroundService;
 import arman.papoyan.zentreesecond.utils.NotificationHelper;
@@ -79,6 +79,9 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private NotificationHelper notificationHelper;
     private Handler continuousCheckHandler;
     private SharedPreferences notificationPrefs;
+    private FirebaseFirestore db;
+    private String userId;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
@@ -104,6 +107,11 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
         notificationPrefs = requireActivity().getSharedPreferences("notification_prefs", Context.MODE_PRIVATE);
         continuousScreenMinutes = notificationPrefs.getInt("continuous_minutes", 0);
+        db = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            userId = currentUser.getUid();
+        }
 
         if (!today.equals(lastOpenDate)) {
             dayPrefs.edit().putString("last_open_date", today).apply();
@@ -119,7 +127,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             requestUsageStatsPermission();
         }
         growthHandler = new Handler();
-
+        treeManager = new TreeManager(requireContext());
         screenReceiver = new ScreenStateReceiver(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -368,6 +376,9 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         updateTreeImage(tree.getCurrentStage());
         updateMotivationText();
     }
+    private int getTodayCompletedTasks() {
+        return 0;
+    }
 
     private void updateTreeImage(int stage) {
         int drawableId;
@@ -397,6 +408,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        saveDailyStats();
         stopGrowthUpdates();
         if (continuousCheckHandler != null) {
             continuousCheckHandler.removeCallbacksAndMessages(null);
@@ -441,5 +453,33 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private void startTrackerService() {
         Intent intent = new Intent(requireContext(), TrackerForegroundService.class);
         requireContext().startService(intent);
+    }
+    private void saveDailyStats() {
+        if (userId == null) return;
+
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        SharedPreferences prefs = requireContext().getSharedPreferences("tree_prefs", Context.MODE_PRIVATE);
+        long currentMinutes = prefs.getLong("total_focus_minutes", 0);
+
+        int tasksCompletedToday = getTodayCompletedTasks();
+
+        int currentLevel = prefs.getInt("tree_level", 1);
+
+        FocusStats todayStats = new FocusStats(today, currentMinutes, tasksCompletedToday, currentLevel);
+
+        db.collection("users").document(userId)
+                .collection("stats").document(today)
+                .set(todayStats)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Stats", "Статистика сохранена за " + today);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Stats", "Ошибка сохранения статистики", e);
+                });
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        saveDailyStats();
     }
 }

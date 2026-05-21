@@ -370,5 +370,20 @@
     <string name="desc_task_completed_indicator">Առաջադրանքի կատարման ցուցիչ</string>
 
     <string name="desc_task_checkbox">Առաջադրանքի նշման վանդակ</string>
-
+    <string name="stats_my_stats">📊 Իմ վիճակագրությունը</string>
+    <string name="stats_total_hours">Ընդհանուր ժամեր</string>
+    <string name="stats_streak_days">Օրեր անընդմեջ</string>
+    <string name="stats_week_chart">📈 Շաբաթվա վիճակագրություն</string>
+    <string name="stats_week_total">Շաբաթում՝ %d ժ</string>
+    <string name="stats_month_total">Ամսում՝ %d ժ</string>
+    <string name="stats_search_user">🔍 Օգտատիրոջ որոնում</string>
+    <string name="stats_search_hint">Էլ. հասցե</string>
+    <string name="stats_user_not_found">❌ Օգտատերը չի գտնվել</string>
+    <string name="stats_search_error">Սխալ որոնման ժամանակ</string>
+    <string name="stats_enter_email">Մուտքագրեք էլ. հասցեն</string>
+    <string name="stats_detail_title">📋 Մանրամասն վիճակագրություն</string>
+    <string name="stats_focus_hours">%d ժ %d ր</string>
+    <string name="stats_tasks_completed">✅ %d</string>
+    <string name="stats_tree_level">🌳 %d</string>
+    <string name="stats_focus_hours_label">Ֆոկուսի ժամեր</string>
 </resources>

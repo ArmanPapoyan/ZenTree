@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import arman.papoyan.zentreesecond.receivers.TaskNotificationReceiver;
-
 public class NotificationCleaner {
 
     private static final String TAG = "NotificationCleaner";

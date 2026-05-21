@@ -1,4 +1,4 @@
-package arman.papoyan.zentreesecond.receivers;
+package arman.papoyan.zentreesecond.utils;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -14,7 +14,6 @@ import androidx.core.app.NotificationCompat;
 import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
 import arman.papoyan.zentreesecond.models.Task;
-import arman.papoyan.zentreesecond.utils.TaskNotificationScheduler;
 
 public class TaskNotificationReceiver extends BroadcastReceiver {
 

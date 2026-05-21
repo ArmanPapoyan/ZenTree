@@ -13,7 +13,6 @@ import android.widget.Toast;
 import java.util.Date;
 
 import arman.papoyan.zentreesecond.models.Task;
-import arman.papoyan.zentreesecond.receivers.TaskNotificationReceiver;
 
 public class TaskNotificationScheduler {
 

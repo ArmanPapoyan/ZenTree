@@ -194,4 +194,20 @@
     <string name="desc_task_checkbox">Отметка о выполнении задачи</string>
     <string name="desc_profile_avatar">Аватар пользователя в профиле</string>
     <string name="action_done">Готово</string>
+    <string name="stats_my_stats">📊 Моя статистика</string>
+    <string name="stats_total_hours">Всего часов</string>
+    <string name="stats_streak_days">Дней подряд</string>
+    <string name="stats_week_chart">📈 Статистика за неделю</string>
+    <string name="stats_week_total">За неделю: %d ч</string>
+    <string name="stats_month_total">За месяц: %d ч</string>
+    <string name="stats_search_user">🔍 Поиск пользователя</string>
+    <string name="stats_search_hint">Email пользователя</string>
+    <string name="stats_user_not_found">❌ Пользователь не найден</string>
+    <string name="stats_search_error">Ошибка поиска</string>
+    <string name="stats_enter_email">Введите email для поиска</string>
+    <string name="stats_detail_title">📋 Детальная статистика</string>
+    <string name="stats_focus_hours">%d ч %d мин</string>
+    <string name="stats_tasks_completed">✅ %d</string>
+    <string name="stats_tree_level">🌳 %d</string>
+    <string name="stats_focus_hours_label">Часы фокуса</string>
 </resources>

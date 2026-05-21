@@ -180,4 +180,13 @@ public class TreeManager {
             Log.e("TreeManager", "Ошибка восстановления дерева из очереди: " + e.getMessage());
         }
     }
+    public long getTotalFocusMinutes() {
+        SharedPreferences prefs = context.getSharedPreferences("tree_prefs", Context.MODE_PRIVATE);
+        return prefs.getLong("total_focus_minutes", 0);
+    }
+
+    public int getTreeLevel() {
+        SharedPreferences prefs = context.getSharedPreferences("tree_prefs", Context.MODE_PRIVATE);
+        return prefs.getInt("tree_level", 1);
+    }
 }
