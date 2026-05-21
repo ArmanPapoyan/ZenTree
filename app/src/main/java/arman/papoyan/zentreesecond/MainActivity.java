@@ -45,6 +45,7 @@ import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
 import arman.papoyan.zentreesecond.receivers.TaskNotificationReceiver;
 import arman.papoyan.zentreesecond.services.TrackerForegroundService;
+import arman.papoyan.zentreesecond.utils.NotificationCleaner;
 import arman.papoyan.zentreesecond.utils.SyncHelper;
 import arman.papoyan.zentreesecond.utils.TreeManager;
 
@@ -80,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        bottomNav = findViewById(R.id.bottom_navigation);
+
         if (savedInstanceState != null) {
             currentNavItemId = savedInstanceState.getInt(KEY_NAV_ITEM, R.id.nav_home);
         } else {
@@ -90,14 +93,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        if (getIntent().getBooleanExtra("logout", false)) {
+            clearUserData();
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.GONE);
+            }
+            currentFragment = new LoginFragment();
+            loadFragment(currentFragment, false);
+            return;
+        }
+
         checkOverlayPermission();
         checkUsageStatsPermission();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
         }
 
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        bottomNav = findViewById(R.id.bottom_navigation);
         updateNavbarText();
 
         SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
@@ -134,7 +145,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MainActivity", "isRegistering = " + isRegistering);
 
         if (isRegistering) {
-            bottomNav.setVisibility(View.GONE);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.GONE);
+            }
             currentFragment = new RegistrationFragment();
             loadFragment(currentFragment, false);
             return;
@@ -144,24 +157,41 @@ public class MainActivity extends AppCompatActivity {
         boolean isGuest = prefs.getBoolean("is_guest", false);
 
         if (isGuest || currentUser != null) {
-            bottomNav.setVisibility(View.VISIBLE);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.VISIBLE);
+            }
             Fragment fragment = getFragmentForNavItem(currentNavItemId);
             currentFragment = fragment;
             loadFragment(fragment, false);
             setupNavigation();
             if (getIntent().getBooleanExtra("open_focus_tab", false)) {
-                bottomNav.setSelectedItemId(R.id.nav_focus);
+                if (bottomNav != null) {
+                    bottomNav.setSelectedItemId(R.id.nav_focus);
+                }
                 getIntent().removeExtra("open_focus_tab");
             }
-            bottomNav.setSelectedItemId(currentNavItemId);
-
+            if (bottomNav != null) {
+                bottomNav.setSelectedItemId(currentNavItemId);
+            }
             syncPendingData();
-
         } else {
-            bottomNav.setVisibility(View.GONE);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.GONE);
+            }
             currentFragment = new LoginFragment();
             loadFragment(currentFragment, false);
         }
+    }
+
+    private void clearUserData() {
+        SharedPreferences loginPrefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
+        loginPrefs.edit().clear().apply();
+
+        SharedPreferences regPrefs = getSharedPreferences("registration_prefs", MODE_PRIVATE);
+        regPrefs.edit().clear().apply();
+
+        NotificationCleaner.clearAllNotifications(this);
+        FirebaseAuth.getInstance().signOut();
     }
     private void cancelAllTaskNotifications() {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);

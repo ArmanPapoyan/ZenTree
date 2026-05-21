@@ -255,18 +255,8 @@ public class ProfileFragment extends Fragment {
         FirebaseUser user = mAuth.getCurrentUser();
 
         NotificationCleaner.clearAllNotifications(requireContext());
-        if (user != null && user.isAnonymous()) {
-            prefs.edit().clear().apply();
-            mAuth.signOut();
-            goToLoginFragment();
-        } else if (user != null) {
-            mAuth.signOut();
-            prefs.edit().clear().apply();
-            goToLoginFragment();
-        } else {
-            prefs.edit().clear().apply();
-            goToLoginFragment();
-        }
+
+        goToLoginFragment();
     }
 
     private void disableFirestoreListeners() {
@@ -288,17 +278,16 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        MainActivity activity = (MainActivity) getActivity();
-        if (activity != null) {
-            activity.hideNavigation();
-        }
+        prefs.edit().clear().apply();
+        mAuth.signOut();
+        NotificationCleaner.clearAllNotifications(requireContext());
 
-        LoginFragment loginFragment = new LoginFragment();
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                .replace(R.id.fragment_container, loginFragment)
-                .commit();
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("logout", true);
+        startActivity(intent);
+
+        requireActivity().finish();
     }
     private enum AuthProvider {
         EMAIL_PASSWORD,
