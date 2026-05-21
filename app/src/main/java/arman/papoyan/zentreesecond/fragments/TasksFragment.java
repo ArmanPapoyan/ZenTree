@@ -117,6 +117,10 @@ public class TasksFragment extends Fragment {
             String taskId = task.getId();
             task.setCompleted(isChecked);
 
+            if (isChecked) {
+                TaskNotificationScheduler.cancelAllTaskNotifications(getContext(), task);
+            }
+
             db.collection("tasks").document(userId)
                     .collection("userTasks").document(taskId)
                     .update("completed", isChecked)
@@ -126,6 +130,7 @@ public class TasksFragment extends Fragment {
                         Toast.makeText(getActivity(), getString(R.string.error_sync_failed), Toast.LENGTH_SHORT).show();
                     });
         });
+
 
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
 
@@ -384,7 +389,7 @@ public class TasksFragment extends Fragment {
         itemTouchHelper.attachToRecyclerView(recyclerView);
     }
     private void deleteTask(Task task, int position) {
-        TaskNotificationScheduler.cancelTaskNotification(getContext(), task);
+        TaskNotificationScheduler.cancelAllTaskNotifications(getContext(), task);
 
         db.collection("tasks").document(userId)
                 .collection("userTasks").document(task.getId())
@@ -413,7 +418,7 @@ public class TasksFragment extends Fragment {
             task.setNotificationSent(false);
 
             Log.d("TasksFragment", "ВЫЗЫВАЕМ TaskNotificationScheduler.scheduleTaskNotification");
-            TaskNotificationScheduler.scheduleTaskNotification(getContext(), task);
+            TaskNotificationScheduler.scheduleTaskNotifications(getContext(), task);
 
             db.collection("tasks").document(userId)
                     .collection("userTasks").document(task.getId())
@@ -570,7 +575,7 @@ public class TasksFragment extends Fragment {
                             .set(task)
                             .addOnSuccessListener(aVoid -> {
                                 Toast.makeText(getActivity(), getString(R.string.toast_task_updated), Toast.LENGTH_SHORT).show();
-                                TaskNotificationScheduler.cancelTaskNotification(getContext(), task);
+                                TaskNotificationScheduler.cancelAllTaskNotifications(getContext(), task);
                                 scheduleTaskNotification(task);
                             })
                             .addOnFailureListener(e -> {

@@ -40,6 +40,7 @@ import java.util.Locale;
 
 import arman.papoyan.zentreesecond.MainActivity;
 import arman.papoyan.zentreesecond.R;
+import arman.papoyan.zentreesecond.utils.NotificationCleaner;
 
 public class ProfileFragment extends Fragment {
 
@@ -85,7 +86,6 @@ public class ProfileFragment extends Fragment {
         }
         out.setOnClickListener(v -> logout());
 
-
         btnThemeSystem.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM));
         btnThemeLight.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_NO));
         btnThemeDark.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_YES));
@@ -105,6 +105,7 @@ public class ProfileFragment extends Fragment {
         Configuration config = new Configuration();
         config.setLocale(locale);
 
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
         getResources().updateConfiguration(config, getResources().getDisplayMetrics());
 
         requireActivity().recreate();
@@ -183,6 +184,8 @@ public class ProfileFragment extends Fragment {
                         progressDialog.show();
                         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+                        NotificationCleaner.clearAllNotifications(requireContext());
+
                         db.collection("tasks").document(userId).collection("userTasks")
                                 .get()
                                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -251,6 +254,7 @@ public class ProfileFragment extends Fragment {
 
         FirebaseUser user = mAuth.getCurrentUser();
 
+        NotificationCleaner.clearAllNotifications(requireContext());
         if (user != null && user.isAnonymous()) {
             prefs.edit().clear().apply();
             mAuth.signOut();
@@ -350,6 +354,8 @@ public class ProfileFragment extends Fragment {
         progressDialog.setMessage(getString(R.string.progress_deleting_account));
         progressDialog.setCancelable(false);
         progressDialog.show();
+
+        NotificationCleaner.clearAllNotifications(requireContext());
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))

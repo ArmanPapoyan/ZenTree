@@ -2,6 +2,7 @@ package arman.papoyan.zentreesecond;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.app.usage.UsageStats;
@@ -42,6 +43,7 @@ import arman.papoyan.zentreesecond.fragments.ProfileFragment;
 import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
+import arman.papoyan.zentreesecond.receivers.TaskNotificationReceiver;
 import arman.papoyan.zentreesecond.services.TrackerForegroundService;
 import arman.papoyan.zentreesecond.utils.SyncHelper;
 import arman.papoyan.zentreesecond.utils.TreeManager;
@@ -160,6 +162,22 @@ public class MainActivity extends AppCompatActivity {
             currentFragment = new LoginFragment();
             loadFragment(currentFragment, false);
         }
+    }
+    private void cancelAllTaskNotifications() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+        Intent intent = new Intent(this, TaskNotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE
+        );
+        if (pendingIntent != null) {
+            alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
+        }
+        Log.d("MainActivity", "Все уведомления отменены");
     }
     @Override
     protected void onSaveInstanceState(Bundle outState) {
