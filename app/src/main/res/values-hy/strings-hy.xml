@@ -1,23 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">ZenTree</string>
-
     <string name="Q1">Յուրաքանչյուր փոքր ջանք բերում է մեծ փոփոխությունների 🌱</string>
     <string name="Q2">Քո ֆոկուսը քո ուժն է 💪</string>
     <string name="Q3">Ծառը աճում է քեզ հետ միասին 🌳</string>
     <string name="Q4">Մեկ քայլ մեկ անգամ, բայց միշտ առաջ 🚶‍</string>
     <string name="Q5">Այսօրվա սերմերը վաղվա անտառն են 🌲</string>
     <string name="Q6">Ֆոկուսի յուրաքանչյուր րոպեն քեզ ավելի ուժեղ է դարձնում ⏰</string>
-
     <string name="accessibility_service_description"> </string>
-
     <string name="delete_text">Վստա՞հ եք, որ ցանկանում եք ջնջել հաշիվը։ Այս գործողությունը անդառնալի է — ձեր բոլոր տվյալները, կարգավորումները և պատմությունը կջնջվեն ընդմիշտ։</string>
-
     <string name="password_text">Շարունակելու համար մուտքագրեք ձեր գաղտնաբառը։ Սա անհրաժեշտ է հաստատելու համար, որ գործողությունը կատարում եք հենց դուք։</string>
-
     <string name="default_web_client_id">YOUR_WEB_CLIENT_ID</string>
-
     <string name="tree">Ծառ</string>
     <string name="Focus">Ֆոկուս</string>
     <string name="tasks">Առաջադրանքներ</string>
@@ -34,29 +27,17 @@
     <string name="status_resting">Հանգստանում ենք... Մի օգտագործեք հեռախոսը</string>
     <string name="status_break_finished">Հանգիստն ավարտվեց 🎉</string>
     <string name="status_break_cancelled">Հանգիստը ընդհատվեց</string>
-
     <string name="toast_bonus_minutes">🌳 +%1$d րոպե ծառին!</string>
-
     <string name="blocker_break_message">Հանգիստ %1$d րոպե Մի օգտագործեք հեռախոսը</string>
-
     <string name="toast_test_growth_added">Թեստ․ +30 րոպե աճին</string>
-
     <string name="dialog_permission_title">Էկրանի ժամանակի հետևման թույլտվություն</string>
-
     <string name="dialog_permission_message">Հավելվածին անհրաժեշտ է հասանելիություն օգտագործման վիճակագրությանը՝ մոտիվացիայի գործակցի համար։ Կարող եք միացնել կարգավորումներում։</string>
-
     <string name="dialog_permission_positive">Բացել կարգավորումները</string>
-
     <string name="dialog_cancel">Չեղարկել</string>
-
     <string name="status_tree_growing">🌱 Ծառը աճում է (էկրանը անջատված է)</string>
-
     <string name="status_growth_paused">⏸️ Աճը դադարեցված է (էկրանը միացված է)</string>
-
     <string name="tree_level_and_stage">Մակարդակ %1$d • Փուլ %2$d</string>
-
     <string name="tree_formatted_time">%1$d ժ %2$d ր</string>
-
     <string name="tree_formatted_percentage">%1$d%%</string>
 
     <string name="error_empty_fields">Լրացրեք բոլոր դաշտերը</string>
@@ -278,97 +259,51 @@
     <string name="hint_task_title">Առաջադրանքի անվանում</string>
 
     <string name="hint_task_description">Նկարագրություն (ըստ ցանկության)</string>
-
     <string name="label_task_priority">Առաջնահերթություն (1 - ամենակարևոր)</string>
-
     <string name="priority_1">1</string>
-
     <string name="priority_2">2</string>
-
     <string name="priority_3">3</string>
-
     <string name="action_select_time">Ընտրել ժամանակ</string>
-
     <string name="status_time_not_selected">Ժամանակը ընտրված չէ</string>
-
     <string name="action_select_date">Ընտրել ամսաթիվ</string>
-
     <string name="status_date_not_selected">Ամսաթիվը ընտրված չէ (այսօր)</string>
-
     <string name="time_preset_5">5</string>
-
     <string name="time_preset_15">15</string>
-
     <string name="time_preset_25">25</string>
-
     <string name="time_preset_45">45</string>
-
     <string name="hint_minutes_short">ր</string>
-
     <string name="action_set_time">Սահմանել</string>
-
     <string name="default_timer_value">05:00</string>
-
     <string name="status_select_break_time">Ընտրեք ընդմիջման ժամանակը</string>
-
     <string name="action_start_break">Սկսել ընդմիջումը</string>
-
     <string name="emoji_sprout">🌱</string>
-
     <string name="new_day_title">Նոր օր!</string>
-
     <string name="new_day_message">Սկսիր քո օրը ֆոկուսով</string>
-
     <string name="desc_new_day_emoji">Ծլարձակող սերմի պատկեր՝ նոր օրվա խորհրդանիշ</string>
-
     <string name="registration_title">Գրանցում</string>
-
     <string name="hint_email">Էլ. փոստ</string>
-
     <string name="hint_create_password">Ստեղծեք գաղտնաբառ</string>
-
     <string name="hint_confirm_password">Կրկնեք գաղտնաբառը</string>
-
     <string name="hint_user_name">Ինչպե՞ս եք կոչվում</string>
-
     <string name="hint_current_screen_time">Օրական քանի՞ ժամ եք հեռախոսում</string>
-
     <string name="label_wake_up_time">Արթնանալու ժամանակ</string>
-
     <string name="hint_select_time_placeholder">Ընտրել ժամանակ</string>
-
     <string name="action_select_short">Ընտրել</string>
-
     <string name="label_screen_time_goal">Էկրանի ժամանակի նպատակ (ժամ)</string>
-
     <string name="hint_screen_time_goal_example">Օրինակ՝ 6</string>
-
     <string name="action_next">Հաջորդը</string>
-
     <string name="action_sign_up_google">Գրանցվել Google-ով</string>
-
     <string name="action_go_to_login">Արդեն ունե՞ք հաշիվ։ Մուտք</string>
-
     <string name="tree_title">Քո ծառը</string>
-
     <string name="tree_initial_level">Մակարդակ 1 • Փուլ 1</string>
-
     <string name="growth_status_idle">💤 Ֆոկուս ռեժիմը անջատված է</string>
-
     <string name="action_test">Թեստ</string>
-
     <string name="motivation_initial">Սկսիր քո գիտակցված ճանապարհը</string>
-
     <string name="time_initial_value">0 ժ 0 ր</string>
-
     <string name="progress_initial_value">0%</string>
-
     <string name="desc_tree_image">Քո ծառի ընթացիկ վիճակը</string>
-
     <string name="desc_tree_growth_overlay">Ծառի աճի անիմացիայի էֆեկտ</string>
-
     <string name="desc_task_completed_indicator">Առաջադրանքի կատարման ցուցիչ</string>
-
     <string name="desc_task_checkbox">Առաջադրանքի նշման վանդակ</string>
     <string name="stats_my_stats">📊 Իմ վիճակագրությունը</string>
     <string name="stats_total_hours">Ընդհանուր ժամեր</string>
@@ -388,4 +323,47 @@
     <string name="stats_focus_hours_label">Ֆոկուսի ժամեր</string>
     <string name="share_stats_title">Կիսվել արդյունքով</string>
     <string name="test_user">Փորձնական օգտատեր</string>
+    <string name="password">Գաղտնաբառ</string>
+    <string name="welcome_back">Բարի վերադարձ ZenTree!</string>
+    <string name="remember_me">Հիշել ինձ</string>
+    <string name="login">Մուտք</string>
+    <string name="no_account">Չունե՞ք հաշիվ։ Գրանցվել</string>
+    <string name="sign_in_google">Մուտք Google-ով</string>
+    <string name="error_invalid_email_format">Մուտքագրեք ճիշտ էլ. հասցե</string>
+    <string name="error_user_not_found">Նման էլ. հասցեով օգտատեր չի գտնվել</string>
+    <string name="error_wrong_password">Սխալ էլ. հասցե կամ գաղտնաբառ</string>
+    <string name="error_too_many_attempts">Չափազանց շատ փորձեր։ Փորձեք ավելի ուշ</string>
+    <string name="error_network">Ստուգեք ինտերնետ կապը</string>
+    <string name="login_please_wait">Մուտք...</string>
+    <string name="login_test_user_wait">Մուտք որպես Test User...</string>
+    <string name="login_test_user_error">Սխալ գաղտնաբառ Test User-ի համար</string>
+    <string name="login_test_user_failed">Test login failed: %1$s</string>
+    <string name="login_google_wait">Մուտք Google-ով...</string>
+    <string name="login_google_error">Google-ի նույնականացման սխալ։ Փորձեք կրկին։</string>
+    <string name="language_dialog_title">Ընտրել լեզուն</string>
+    <string name="language_russian">Ռուսերեն</string>
+    <string name="language_english">Անգլերեն</string>
+    <string name="language_armenian">Հայերեն</string>
+    <string name="language_cancel">Չեղարկել</string>
+    <string name="language_changed">Լեզուն փոխվել է</string>
+    <string name="email_empty_error">Մուտքագրեք էլ. հասցեն</string>
+    <string name="email_check_wait">Ստուգում է էլ. հասցեն...</string>
+    <string name="email_already_taken_title">Էլ. հասցեն արդեն զբաղված է</string>
+    <string name="email_already_taken_message">Նման էլ. հասցեով օգտատեր արդեն գոյություն ունի։ Մուտք գործեք կամ օգտագործեք այլ էլ. հասցե։</string>
+    <string name="email_already_taken_login">Մուտք</string>
+    <string name="email_already_taken_back">Հետ</string>
+    <string name="email_check_error">Էլ. հասցեի ստուգման սխալ՝ %1$s</string>
+    <string name="email_network_error">Ինտերնետ կապ չկա</string>
+    <string name="password_empty_error">Մուտքագրեք գաղտնաբառը</string>
+    <string name="password_confirm_empty_error">Հաստատեք գաղտնաբառը</string>
+    <string name="password_too_short_custom">Գաղտնաբառը պետք է պարունակի առնվազն 6 նիշ</string>
+    <string name="password_not_match_custom">Գաղտնաբառերը չեն համընկնում</string>
+    <string name="account_creation_wait">Հաշվի ստեղծում...</string>
+    <string name="account_creation_success">Հաշիվը հաջողությամբ ստեղծվեց</string>
+    <string name="email_verification_sent">Հաստատման նամակն ուղարկվել է %1$s</string>
+    <string name="email_verification_failed">Չհաջողվեց ուղարկել հաստատման նամակը</string>
+    <string name="email_verification_check_wait">Ստուգում է էլ. հասցեն...</string>
+    <string name="email_already_in_use">Էլ. հասցեն արդեն օգտագործվում է</string>
+    <string name="google_registration_wait">Գրանցում Google-ով...</string>
+    <string name="test_user_login">Test User</string>
 </resources>

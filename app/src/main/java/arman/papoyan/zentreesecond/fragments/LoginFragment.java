@@ -2,9 +2,11 @@ package arman.papoyan.zentreesecond.fragments;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
@@ -30,6 +33,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import arman.papoyan.zentreesecond.MainActivity;
@@ -47,6 +51,7 @@ public class LoginFragment extends Fragment {
     private SharedPreferences prefs;
     private GoogleSignInClient googleSignInClient;
     private static final int RC_SIGN_IN = 1001;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
@@ -60,6 +65,7 @@ public class LoginFragment extends Fragment {
         prefs = getActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
         Button btnGoogle = view.findViewById(R.id.btn_google_sign_in);
         btnGoogle.setOnClickListener(v -> signInWithGoogle());
+        ImageButton btnLanguage = view.findViewById(R.id.btn_language);
 
         mAuth = FirebaseAuth.getInstance();
 
@@ -68,6 +74,7 @@ public class LoginFragment extends Fragment {
                 .requestEmail()
                 .build();
         googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+        btnLanguage.setOnClickListener(v -> showLanguageDialog());
 
         buttonLogin.setOnClickListener(v -> {
             String email = editTextEmail.getText().toString().trim();
@@ -75,49 +82,70 @@ public class LoginFragment extends Fragment {
 
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(getActivity(), getString(R.string.error_empty_fields), Toast.LENGTH_SHORT).show();
-            } else {
-                mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(getActivity(), task -> {
-                            if (task.isSuccessful()) {
-                                FirebaseUser user = mAuth.getCurrentUser();
-                                if (user.isEmailVerified()) {
-                                    if (checkBoxRememberMe.isChecked()) {
-                                        prefs.edit()
-                                                .putBoolean("remember_me", true)
-                                                .putString("email", email)
-                                                .putString("password", password)
-                                                .apply();
-                                    } else {
-                                        prefs.edit().clear().apply();
-                                    }
-                                    TreeFirestoreManager firestoreManager = new TreeFirestoreManager();
-                                    firestoreManager.loadTree(new TreeFirestoreManager.TreeLoadCallback() {
-                                        @Override
-                                        public void onSuccess(TreeModel tree) {
-                                            TreeManager treeManager = new TreeManager(getActivity());
-                                            treeManager.saveTree(tree);
-                                            MainActivity activity = (MainActivity) getActivity();
-                                            activity.goToHomeAfterLogin();
-                                        }
-
-                                        @Override
-                                        public void onError(String error) {
-                                            TreeModel newTree = new TreeModel();
-                                            TreeManager treeManager = new TreeManager(getActivity());
-                                            treeManager.saveTree(newTree);
-
-                                            MainActivity activity = (MainActivity) getActivity();
-                                            activity.goToHomeAfterLogin();
-                                        }
-                                    });
-                                } else {
-                                    Toast.makeText(getActivity(), getString(R.string.error_email_not_verified), Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                Toast.makeText(getActivity(), getString(R.string.error_with_message, task.getException().getMessage()), Toast.LENGTH_LONG).show();
-                            }
-                        });
+                return;
             }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(getActivity(), getString(R.string.error_invalid_email_format), Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setMessage(getString(R.string.login_please_wait));
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            mAuth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(getActivity(), task -> {
+                        progressDialog.dismiss();
+
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user.isEmailVerified()) {
+                                if (checkBoxRememberMe.isChecked()) {
+                                    prefs.edit()
+                                            .putBoolean("remember_me", true)
+                                            .putString("email", email)
+                                            .putString("password", password)
+                                            .apply();
+                                } else {
+                                    prefs.edit().clear().apply();
+                                }
+                                TreeFirestoreManager firestoreManager = new TreeFirestoreManager();
+                                firestoreManager.loadTree(new TreeFirestoreManager.TreeLoadCallback() {
+                                    @Override
+                                    public void onSuccess(TreeModel tree) {
+                                        TreeManager treeManager = new TreeManager(getActivity());
+                                        treeManager.saveTree(tree);
+                                        ((MainActivity) getActivity()).goToHomeAfterLogin();
+                                    }
+                                    @Override
+                                    public void onError(String error) {
+                                        TreeModel newTree = new TreeModel();
+                                        TreeManager treeManager = new TreeManager(getActivity());
+                                        treeManager.saveTree(newTree);
+                                        ((MainActivity) getActivity()).goToHomeAfterLogin();
+                                    }
+                                });
+                            } else {
+                                Toast.makeText(getActivity(), getString(R.string.error_email_not_verified), Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            String errorMessage = task.getException().getMessage();
+
+                            if (errorMessage.contains("There is no user record")) {
+                                Toast.makeText(getActivity(), getString(R.string.error_user_not_found), Toast.LENGTH_LONG).show();
+                            } else if (errorMessage.contains("password is invalid") || errorMessage.contains("incorrect")) {
+                                Toast.makeText(getActivity(), getString(R.string.error_wrong_password), Toast.LENGTH_LONG).show();
+                            } else if (errorMessage.contains("too many requests")) {
+                                Toast.makeText(getActivity(), getString(R.string.error_too_many_attempts), Toast.LENGTH_LONG).show();
+                            } else if (errorMessage.contains("network error")) {
+                                Toast.makeText(getActivity(), getString(R.string.error_network), Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getActivity(), getString(R.string.error_with_message, errorMessage), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
         });
 
         buttonRegister.setOnClickListener(v -> {
@@ -126,6 +154,7 @@ public class LoginFragment extends Fragment {
                 ((MainActivity) getActivity()).switchAuthFragment(registrationFragment);
             }
         });
+
         boolean isRemembered = prefs.getBoolean("remember_me", false);
         if (isRemembered) {
             String savedEmail = prefs.getString("email", "");
@@ -134,9 +163,10 @@ public class LoginFragment extends Fragment {
             editTextPassword.setText(savedPassword);
             checkBoxRememberMe.setChecked(true);
         }
+
         btnTestUser.setOnClickListener(v -> {
             ProgressDialog progressDialog = new ProgressDialog(getActivity());
-            progressDialog.setMessage("Вход как Test User...");
+            progressDialog.setMessage(getString(R.string.login_test_user_wait));
             progressDialog.setCancelable(false);
             progressDialog.show();
 
@@ -154,11 +184,63 @@ public class LoginFragment extends Fragment {
                             startActivity(intent);
                             requireActivity().finish();
                         } else {
-                            Toast.makeText(getContext(), "Test login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            String error = task.getException().getMessage();
+                            if (error.contains("password")) {
+                                Toast.makeText(getContext(), getString(R.string.login_test_user_error), Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getContext(), getString(R.string.login_test_user_failed, error), Toast.LENGTH_LONG).show();
+                            }
                         }
                     });
         });
+
         return view;
+    }
+
+    private void showLanguageDialog() {
+        String[] languages = {getString(R.string.language_russian), getString(R.string.language_english), getString(R.string.language_armenian)};
+        int currentLang = getCurrentLanguageIndex();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(getString(R.string.language_dialog_title))
+                .setSingleChoiceItems(languages, currentLang, (dialog, which) -> {
+                    String langCode = "";
+                    switch (which) {
+                        case 0: langCode = "ru"; break;
+                        case 1: langCode = "en"; break;
+                        case 2: langCode = "hy"; break;
+                    }
+                    setLanguage(langCode);
+                    dialog.dismiss();
+                });
+        builder.setNegativeButton(getString(R.string.language_cancel), null);
+        builder.show();
+    }
+
+    private int getCurrentLanguageIndex() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        String currentLang = prefs.getString("language", "ru");
+        switch (currentLang) {
+            case "ru": return 0;
+            case "en": return 1;
+            case "hy": return 2;
+            default: return 0;
+        }
+    }
+
+    private void setLanguage(String languageCode) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        prefs.edit().putString("language", languageCode).apply();
+
+        Locale locale = new Locale(languageCode);
+        Locale.setDefault(locale);
+
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
+        requireActivity().recreate();
     }
 
     @Override
@@ -174,10 +256,12 @@ public class LoginFragment extends Fragment {
             }
         }
     }
+
     private void signInWithGoogle() {
         Intent signInIntent = googleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
+
     private void checkAndSaveUserToFirestore(FirebaseUser user) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("users").document(user.getUid()).get()
@@ -193,6 +277,7 @@ public class LoginFragment extends Fragment {
                     }
                 });
     }
+
     private void checkUserInFirestore(FirebaseUser user) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String userId = user.getUid();
@@ -229,6 +314,7 @@ public class LoginFragment extends Fragment {
                     goToRegistrationWithGoogleData(user);
                 });
     }
+
     private void goToRegistrationWithGoogleData(FirebaseUser user) {
         SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
         prefs.edit()
@@ -243,15 +329,28 @@ public class LoginFragment extends Fragment {
             ((MainActivity) getActivity()).hideNavigation();
         }
     }
+
     private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
+        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.login_google_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(getActivity(), task -> {
+                    progressDialog.dismiss();
+
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         checkUserInFirestore(user);
                     } else {
-                        Toast.makeText(getActivity(), getString(R.string.error_auth_failed), Toast.LENGTH_LONG).show();
+                        String errorMessage = task.getException().getMessage();
+                        if (errorMessage.contains("credential")) {
+                            Toast.makeText(getActivity(), getString(R.string.login_google_error), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getActivity(), getString(R.string.error_auth_failed), Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
     }

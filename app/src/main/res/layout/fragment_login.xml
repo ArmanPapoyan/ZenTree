@@ -8,11 +8,23 @@
     android:padding="24dp"
     android:background="@color/background_light">
 
+    <ImageButton
+        android:id="@+id/btn_language"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_language"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"/>
+
     <TextView
         android:id="@+id/text_view_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="С возвращением в ZenTree!"
+        android:text="@string/welcome_back"
         android:textColor="@color/primary_green_dark"
         android:textSize="26sp"
         android:textStyle="bold"
@@ -27,7 +39,7 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Электронная почта"
+        android:hint="@string/hint_email"
         app:boxStrokeColor="@color/primary_green"
         app:hintTextColor="@color/primary_green"
         app:layout_constraintWidth_percent="0.9"
@@ -49,7 +61,7 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Пароль"
+        android:hint="@string/password"
         app:passwordToggleEnabled="true"
         app:boxStrokeColor="@color/primary_green"
         app:hintTextColor="@color/primary_green"
@@ -71,7 +83,7 @@
         android:id="@+id/checkBox_remember_me"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Запомнить меня"
+        android:text="@string/remember_me"
         android:textSize="14sp"
         android:textColor="#757575"
         android:layout_marginTop="8dp"
@@ -82,7 +94,7 @@
         android:id="@+id/button_login"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Войти"
+        android:text="@string/login"
         android:backgroundTint="@color/primary_green"
         android:textColor="@color/white"
         android:padding="16dp"
@@ -113,7 +125,7 @@
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Нет аккаунта? Зарегистрироваться"
+        android:text="@string/no_account"
         android:textColor="@color/primary_green"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -124,7 +136,7 @@
         android:id="@+id/btn_google_sign_in"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Войти через Google"
+        android:text="@string/sign_in_google"
         android:textSize="14sp"
         android:textColor="@color/primary_green"
         android:padding="12dp"
@@ -141,4 +153,5 @@
         app:layout_constraintTop_toBottomOf="@id/test_user"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

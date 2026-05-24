@@ -3,10 +3,12 @@ package arman.papoyan.zentreesecond.fragments;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,6 +59,7 @@ public class RegistrationFragment extends Fragment {
     private Button btnNext;
     private TextView textViewTitle;
     private EditText etScreenTimeGoal;
+    private String userEmail;
 
     private static final String KEY_CURRENT_STEP = "current_step";
     private static final String KEY_EMAIL = "email";
@@ -88,6 +92,7 @@ public class RegistrationFragment extends Fragment {
         buttonSelectWakeUpTime = view.findViewById(R.id.button_select_wake_up_time);
         btnNext = view.findViewById(R.id.button_next);
         textViewTitle = view.findViewById(R.id.text_view_title);
+        ImageButton btnLanguage = view.findViewById(R.id.btn_language);
 
         btnNext.setOnClickListener(v -> handleNextStep());
         buttonSelectWakeUpTime.setOnClickListener(v -> showTimePickerDialog());
@@ -97,6 +102,7 @@ public class RegistrationFragment extends Fragment {
                 ((MainActivity) getActivity()).switchAuthFragment(new LoginFragment());
             }
         });
+
         SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
         String tempEmail = prefs.getString("temp_email", "");
         String tempName = prefs.getString("temp_name", "");
@@ -125,8 +131,55 @@ public class RegistrationFragment extends Fragment {
 
         Button btnGoogleSignUp = view.findViewById(R.id.btn_google_sign_up);
         btnGoogleSignUp.setOnClickListener(v -> signInWithGoogle());
+        btnLanguage.setOnClickListener(v -> showLanguageDialog());
 
         return view;
+    }
+
+    private void showLanguageDialog() {
+        String[] languages = {getString(R.string.language_russian), getString(R.string.language_english), getString(R.string.language_armenian)};
+        int currentLang = getCurrentLanguageIndex();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(getString(R.string.language_dialog_title))
+                .setSingleChoiceItems(languages, currentLang, (dialog, which) -> {
+                    String langCode = "";
+                    switch (which) {
+                        case 0: langCode = "ru"; break;
+                        case 1: langCode = "en"; break;
+                        case 2: langCode = "hy"; break;
+                    }
+                    setLanguage(langCode);
+                    dialog.dismiss();
+                });
+        builder.setNegativeButton(getString(R.string.language_cancel), null);
+        builder.show();
+    }
+
+    private int getCurrentLanguageIndex() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        String currentLang = prefs.getString("language", "ru");
+        switch (currentLang) {
+            case "ru": return 0;
+            case "en": return 1;
+            case "hy": return 2;
+            default: return 0;
+        }
+    }
+
+    private void setLanguage(String languageCode) {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("settings_prefs", MODE_PRIVATE);
+        prefs.edit().putString("language", languageCode).apply();
+
+        Locale locale = new Locale(languageCode);
+        Locale.setDefault(locale);
+
+        Configuration config = new Configuration();
+        config.setLocale(locale);
+
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
+        requireActivity().recreate();
     }
 
     @Override
@@ -181,8 +234,16 @@ public class RegistrationFragment extends Fragment {
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+
+        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.google_registration_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(getActivity(), task -> {
+                    progressDialog.dismiss();
+
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         isGoogleUser = true;
@@ -229,26 +290,44 @@ public class RegistrationFragment extends Fragment {
     private void validateEmailStep() {
         String email = etEmail.getText().toString().trim();
 
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (email.isEmpty()) {
+            etEmail.setError(getString(R.string.email_empty_error));
+            return;
+        }
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.setError(getString(R.string.error_invalid_email));
             return;
         }
-        showStep(2);
+
+        checkEmailAndProceed(email);
     }
 
     private void validatePasswordStep() {
         String pass = etPass.getText().toString();
         String confirmPass = etConfirmPass.getText().toString();
 
+        if (pass.isEmpty()) {
+            etPass.setError(getString(R.string.password_empty_error));
+            return;
+        }
+
         if (pass.length() < 6) {
-            etPass.setError(getString(R.string.error_password_too_short));
+            etPass.setError(getString(R.string.password_too_short_custom));
             return;
         }
+
+        if (confirmPass.isEmpty()) {
+            etConfirmPass.setError(getString(R.string.password_confirm_empty_error));
+            return;
+        }
+
         if (!pass.equals(confirmPass)) {
-            etConfirmPass.setError(getString(R.string.error_passwords_dont_match));
+            etConfirmPass.setError(getString(R.string.password_not_match_custom));
             return;
         }
-        showStep(3);
+
+        createUserAndProceed(pass, confirmPass);
     }
 
     private void showStep(int step) {
@@ -305,8 +384,15 @@ public class RegistrationFragment extends Fragment {
             return;
         }
 
+        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.account_creation_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(requireActivity(), task -> {
+                    progressDialog.dismiss();
+
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
@@ -329,6 +415,7 @@ public class RegistrationFragment extends Fragment {
                             db.collection("users").document(userId).set(userData)
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d("Registration", getString(R.string.log_user_data_saved));
+                                        Toast.makeText(getActivity(), getString(R.string.account_creation_success), Toast.LENGTH_SHORT).show();
                                     })
                                     .addOnFailureListener(e -> {
                                         Log.e("Registration", getString(R.string.error_with_message, e.getMessage()));
@@ -336,7 +423,16 @@ public class RegistrationFragment extends Fragment {
                             showVerificationDialog(user);
                         }
                     } else {
-                        Toast.makeText(getActivity(), getString(R.string.error_with_message, task.getException().getMessage()), Toast.LENGTH_LONG).show();
+                        String errorMessage = task.getException().getMessage();
+                        if (errorMessage.contains("email already in use")) {
+                            Toast.makeText(getActivity(), getString(R.string.email_already_in_use), Toast.LENGTH_LONG).show();
+                        } else if (errorMessage.contains("invalid email")) {
+                            Toast.makeText(getActivity(), getString(R.string.error_invalid_email), Toast.LENGTH_LONG).show();
+                        } else if (errorMessage.contains("weak password")) {
+                            Toast.makeText(getActivity(), getString(R.string.password_too_short_custom), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getActivity(), getString(R.string.error_with_message, task.getException().getMessage()), Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
     }
@@ -349,7 +445,14 @@ public class RegistrationFragment extends Fragment {
         builder.setMessage(dialogMessage);
 
         builder.setPositiveButton(getString(R.string.action_verified_confirm), (dialog, which) -> {
+            ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setMessage(getString(R.string.email_verification_check_wait));
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
             user.reload().addOnCompleteListener(task -> {
+                progressDialog.dismiss();
+
                 if (user.isEmailVerified()) {
                     SharedPreferences prefs = requireActivity().getSharedPreferences("registration_prefs", Context.MODE_PRIVATE);
                     prefs.edit().putBoolean("is_registering", false).apply();
@@ -361,11 +464,13 @@ public class RegistrationFragment extends Fragment {
                 }
             });
         });
+
         builder.setNegativeButton(getString(R.string.action_resend_email), (dialog, which) -> {
             user.sendEmailVerification();
             Toast.makeText(getActivity(), getString(R.string.toast_email_resent), Toast.LENGTH_SHORT).show();
             showVerificationDialog(user);
         });
+
         builder.setCancelable(false);
         builder.show();
     }
@@ -376,6 +481,7 @@ public class RegistrationFragment extends Fragment {
         SharedPreferences prefs = requireActivity().getSharedPreferences("registration_prefs", Context.MODE_PRIVATE);
         prefs.edit().putBoolean("is_registering", false).apply();
     }
+
     private void saveUserToFirestore(String email, String name, String wakeUpTime, String screenTimeGoalStr) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) return;
@@ -415,6 +521,83 @@ public class RegistrationFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     Log.e("Registration", getString(R.string.error_with_message, e.getMessage()));
                     Toast.makeText(getActivity(), getString(R.string.error_save_data_failed), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void checkEmailAndProceed(String email) {
+        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.email_check_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        FirebaseAuth.getInstance().fetchSignInMethodsForEmail(email)
+                .addOnCompleteListener(task -> {
+                    progressDialog.dismiss();
+
+                    if (task.isSuccessful()) {
+                        boolean isEmailTaken = task.getResult().getSignInMethods().size() > 0;
+
+                        if (isEmailTaken) {
+                            new AlertDialog.Builder(getActivity())
+                                    .setTitle(getString(R.string.email_already_taken_title))
+                                    .setMessage(getString(R.string.email_already_taken_message))
+                                    .setPositiveButton(getString(R.string.email_already_taken_login), (dialog, which) -> {
+                                        if (getActivity() instanceof MainActivity) {
+                                            ((MainActivity) getActivity()).switchAuthFragment(new LoginFragment());
+                                        }
+                                    })
+                                    .setNegativeButton(getString(R.string.email_already_taken_back), null)
+                                    .show();
+                        } else {
+                            userEmail = email;
+                            showStep(2);
+                        }
+                    } else {
+                        String error = task.getException().getMessage();
+                        if (error.contains("NETWORK_ERROR")) {
+                            Toast.makeText(getActivity(), getString(R.string.email_network_error), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getActivity(), getString(R.string.email_check_error, error), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+    }
+
+    private void createUserAndProceed(String password, String confirmPassword) {
+        ProgressDialog progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.account_creation_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(userEmail, password)
+                .addOnCompleteListener(task -> {
+                    progressDialog.dismiss();
+
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if (user != null) {
+                            user.sendEmailVerification()
+                                    .addOnCompleteListener(verifyTask -> {
+                                        if (verifyTask.isSuccessful()) {
+                                            Toast.makeText(getActivity(), getString(R.string.email_verification_sent, userEmail), Toast.LENGTH_LONG).show();
+                                            showStep(3);
+                                        } else {
+                                            Toast.makeText(getActivity(), getString(R.string.email_verification_failed), Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                        }
+                    } else {
+                        String errorMessage = task.getException().getMessage();
+                        if (errorMessage.contains("email already in use")) {
+                            Toast.makeText(getActivity(), getString(R.string.email_already_in_use), Toast.LENGTH_LONG).show();
+                        } else if (errorMessage.contains("invalid email")) {
+                            Toast.makeText(getActivity(), getString(R.string.error_invalid_email), Toast.LENGTH_LONG).show();
+                        } else if (errorMessage.contains("weak password")) {
+                            Toast.makeText(getActivity(), getString(R.string.password_too_short_custom), Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getActivity(), getString(R.string.error_with_message, errorMessage), Toast.LENGTH_LONG).show();
+                        }
+                    }
                 });
     }
 }
