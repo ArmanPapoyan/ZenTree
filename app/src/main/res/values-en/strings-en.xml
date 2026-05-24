@@ -356,4 +356,6 @@
     <string name="stats_tasks_completed">✅ %d</string>
     <string name="stats_tree_level">🌳 %d</string>
     <string name="stats_focus_hours_label">Focus Hours</string>
+    <string name="share_stats_title">Share stats</string>
+    <string name="test_user">Test User</string>
 </resources>

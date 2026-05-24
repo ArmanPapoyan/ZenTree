@@ -94,11 +94,11 @@
         android:layout_marginTop="32dp"/>
 
     <Button
-        android:id="@+id/guest"
+        android:id="@+id/test_user"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Войти как гость"
+        android:text="@string/test_user"
         android:textColor="@color/primary_green"
         android:padding="16dp"
         app:cornerRadius="12dp"
@@ -138,7 +138,7 @@
         app:backgroundTint="@android:color/white"
         app:cornerRadius="8dp"
         app:layout_constraintWidth_percent="0.6"
-        app:layout_constraintTop_toBottomOf="@id/guest"
+        app:layout_constraintTop_toBottomOf="@id/test_user"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -18,12 +18,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -62,7 +60,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private TextView motivationText;
     private TextView growthStatusText;
     private ProgressBar treeProgressBar;
-    private Button test;
     private TextView textViewTime;
     private TextView textViewProgress;
     private TreeManager treeManager;
@@ -94,9 +91,8 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         treeProgressBar = view.findViewById(R.id.tree_progress_bar);
         textViewTime = view.findViewById(R.id.text_view_time);
         textViewProgress = view.findViewById(R.id.text_view_progress);
-        test = view.findViewById(R.id.test);
 
-        treeManager = new TreeManager(requireActivity());
+        treeManager = new TreeManager(requireContext());
         tree = treeManager.loadTree();
 
         loadUserDataFromFirestore();
@@ -120,6 +116,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             updateTreeUI();
             showNewDayAnimation();
             continuousScreenMinutes = 0;
+            continuousScreenMinutes = 0;
             saveContinuousMinutes();
             saveNotificationSent(false);
         }
@@ -127,7 +124,16 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             requestUsageStatsPermission();
         }
         growthHandler = new Handler();
-        treeManager = new TreeManager(requireContext());
+
+        if (screenReceiver == null) {
+            screenReceiver = new ScreenStateReceiver(this);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_SCREEN_ON);
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
+            requireActivity().registerReceiver(screenReceiver, filter);
+            Log.d(TAG, "ScreenStateReceiver registered");
+        }
+
         screenReceiver = new ScreenStateReceiver(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -148,20 +154,13 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
         updateTreeImage(tree.getCurrentStage());
         updateTreeUI();
-
-        test.setOnClickListener(v -> {
-            SharedPreferences prefs = requireActivity().getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
-            int x = prefs.getInt("x", 60);
-            float motivation = prefs.getFloat("motivation", 1.0f);
-            tree.addMinutes(30, x, motivation);
-            updateTreeUI();
-            Toast.makeText(getActivity(), getString(R.string.toast_test_growth_added), Toast.LENGTH_LONG).show();
-        });
         return view;
     }
+
     private void saveContinuousCheckRunning(boolean running) {
         notificationPrefs.edit().putBoolean("continuous_check_running", running).apply();
     }
+
     private boolean isContinuousCheckRunning() {
         return notificationPrefs.getBoolean("continuous_check_running", false);
     }
@@ -192,7 +191,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             }
         }, 60000);
     }
-
 
     private int getCurrentScreenTime() {
         UsageStatsManager usageStatsManager = (UsageStatsManager) requireActivity().getSystemService(Context.USAGE_STATS_SERVICE);
@@ -283,6 +281,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     public void onScreenOff() {
         lastScreenOffTime = System.currentTimeMillis();
         if (isFocusModeActive) {
+            stopGrowthUpdates();
             screenOffTime = System.currentTimeMillis();
             tree.startGrowth();
             growthStatusText.setText(getString(R.string.status_tree_growing));
@@ -294,18 +293,26 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     @Override
     public void onScreenOn() {
         long now = System.currentTimeMillis();
+
+        stopGrowthUpdates();
+        if (screenOffTime > 0) {
+            long timeSpentOff = now - screenOffTime;
+            Log.d(TAG, "Экран выключен был: " + timeSpentOff + " мс");
+            screenOffTime = 0;
+        }
+
         if (lastScreenOffTime > 0 && (now - lastScreenOffTime) >= 5 * 60 * 1000) {
             notificationPrefs.edit().putLong("last_notification_time", 0).apply();
         }
 
         screenOnStartTime = now;
+
         if (isFocusModeActive && tree.isGrowing()) {
             tree.stopGrowth();
             treeManager.saveTree(tree);
             updateTreeUI();
             growthStatusText.setText(getString(R.string.status_growth_paused));
             growthStatusText.setTextColor(Color.parseColor("#FF9800"));
-            stopGrowthUpdates();
         }
     }
 
@@ -328,32 +335,50 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         growthUpdateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (isFocusModeActive && tree.isGrowing()) {
-                    long growthDuration = System.currentTimeMillis() - screenOffTime;
-                    int secondsPassed = (int) (growthDuration / 1000);
-                    if (secondsPassed >= 10) {
-                        int minutesToAdd = secondsPassed / 10;
-                        if (minutesToAdd > 0) {
-                            SharedPreferences prefs = requireActivity().getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
-                            int x = prefs.getInt("x", 60);
-                            float motivation = prefs.getFloat("motivation", 1.0f);
-                            int currentStage = tree.getCurrentStage();
-                            if (currentStage < 6) {
-                                int neededForNext = (int) (x * motivation * currentStage);
-                                int currentProgress = tree.getProgressPercentage();
-                                int remainingForNext = neededForNext - (currentProgress * neededForNext / 100);
-                                if (minutesToAdd > remainingForNext) minutesToAdd = remainingForNext;
-                            }
-                            tree.addMinutes(minutesToAdd, x, motivation);
-                            treeManager.saveTree(tree);
-                            updateTreeUI();
-                            screenOffTime = System.currentTimeMillis();
-                        }
-                        growthHandler.postDelayed(this, 5000);
-                    } else {
-                        growthHandler.postDelayed(this, 1000);
-                    }
+                if (!isFocusModeActive || !tree.isGrowing()) {
+                    Log.d(TAG, "Рост остановлен, выходим из цикла");
+                    return;
                 }
+
+                long now = System.currentTimeMillis();
+                if (screenOffTime == 0) {
+                    Log.d(TAG, "screenOffTime = 0, выходим");
+                    return;
+                }
+
+                long growthDuration = now - screenOffTime;
+                if (growthDuration <= 0) return;
+
+                int secondsPassed = (int) (growthDuration / 1000);
+
+                if (secondsPassed < 60) {
+                    growthHandler.postDelayed(this, 1000);
+                    return;
+                }
+
+                int minutesToAdd = secondsPassed / 60;
+
+                if (minutesToAdd > 5) {
+                    Log.w(TAG, "Слишком много минут за раз (" + minutesToAdd + "), ограничиваем до 5");
+                    minutesToAdd = 5;
+                }
+
+                if (minutesToAdd > 0) {
+                    SharedPreferences prefs = requireActivity().getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
+                    int x = prefs.getInt("x", 60);
+                    float motivation = prefs.getFloat("motivation", 1.0f);
+                    int currentStage = tree.getCurrentStage();
+                    if (currentStage < 6) {
+                        int neededForNext = (int) (x * motivation * currentStage);
+                        int currentProgress = tree.getProgressPercentage();
+                        int remainingForNext = neededForNext - (currentProgress * neededForNext / 100);
+                        if (minutesToAdd > remainingForNext) minutesToAdd = remainingForNext;
+                    }
+                    treeManager.addFocusMinutes(minutesToAdd);
+                    updateTreeUI();
+                    screenOffTime = System.currentTimeMillis();
+                }
+                growthHandler.postDelayed(this, 60000);
             }
         };
         growthHandler.post(growthUpdateRunnable);
@@ -364,11 +389,18 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             growthHandler.removeCallbacks(growthUpdateRunnable);
             growthUpdateRunnable = null;
         }
+        if (growthHandler != null) {
+            growthHandler.removeCallbacksAndMessages(null);
+        }
     }
 
     private void updateTreeUI() {
-        int totalMinutes = tree.getTotalMinutes();
+        int totalMinutes = treeManager.getTotalFocusMinutes();
         int progress = tree.getProgressPercentage();
+
+        Log.d("Stats", "updateTreeUI - totalMinutes = " + totalMinutes);
+        Log.d("Stats", "updateTreeUI - tree.getTotalMinutes() = " + tree.getTotalMinutes());
+
         treeLevelText.setText(getString(R.string.tree_level_and_stage, tree.getLevel(), tree.getCurrentStage()));
         treeProgressBar.setProgress(progress);
         textViewTime.setText(getString(R.string.tree_formatted_time, totalMinutes / 60, totalMinutes % 60));
@@ -376,6 +408,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         updateTreeImage(tree.getCurrentStage());
         updateMotivationText();
     }
+
     private int getTodayCompletedTasks() {
         return 0;
     }
@@ -444,26 +477,26 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         titleView.animate().alpha(1f).setDuration(400).setStartDelay(300).start();
         messageView.animate().alpha(1f).setDuration(400).setStartDelay(600).withEndAction(() -> new Handler().postDelayed(dialog::dismiss, 1500)).start();
     }
+
     private void startWorkManager() {
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(
                 UsageTrackerWorker.class,
                 15, TimeUnit.MINUTES).build();
         WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork("usage_tracker", ExistingPeriodicWorkPolicy.KEEP, workRequest);
     }
+
     private void startTrackerService() {
         Intent intent = new Intent(requireContext(), TrackerForegroundService.class);
         requireContext().startService(intent);
     }
+
     private void saveDailyStats() {
         if (userId == null) return;
 
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        SharedPreferences prefs = requireContext().getSharedPreferences("tree_prefs", Context.MODE_PRIVATE);
-        long currentMinutes = prefs.getLong("total_focus_minutes", 0);
-
+        int currentMinutes = (int) treeManager.getTotalFocusMinutes();
+        int currentLevel = treeManager.getTreeLevel();
         int tasksCompletedToday = getTodayCompletedTasks();
-
-        int currentLevel = prefs.getInt("tree_level", 1);
 
         FocusStats todayStats = new FocusStats(today, currentMinutes, tasksCompletedToday, currentLevel);
 
@@ -477,6 +510,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
                     Log.e("Stats", "Ошибка сохранения статистики", e);
                 });
     }
+
     @Override
     public void onPause() {
         super.onPause();

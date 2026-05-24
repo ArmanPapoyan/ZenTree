@@ -1,5 +1,7 @@
 package arman.papoyan.zentreesecond.fragments;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,8 +26,11 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -47,7 +53,7 @@ public class StatisticsFragment extends Fragment {
     private TextView textViewSearchResult;
     private RecyclerView recyclerViewStats;
     private BarChart barChart;
-
+    private ListenerRegistration treeListener;
     private StatisticsAdapter adapter;
     private List<FocusStats> statsList;
     private FirebaseFirestore db;
@@ -76,6 +82,8 @@ public class StatisticsFragment extends Fragment {
         adapter = new StatisticsAdapter(statsList);
         recyclerViewStats.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewStats.setAdapter(adapter);
+        ImageButton btnShareStats = view.findViewById(R.id.btn_share_stats);
+        btnShareStats.setOnClickListener(v -> shareStats());
 
         loadMyStats();
         loadWeekStats();
@@ -84,6 +92,85 @@ public class StatisticsFragment extends Fragment {
         buttonSearch.setOnClickListener(v -> searchUser());
 
         return view;
+    }
+    private void listenToTreeChanges() {
+        if (currentUserId == null) return;
+
+        treeListener = db.collection("users").document(currentUserId)
+                .collection("tree").document("progress")
+                .addSnapshotListener((snapshot, error) -> {
+                    if (snapshot != null && snapshot.exists()) {
+                        loadMyStats();
+                        loadWeekStats();
+                        loadMonthStats();
+                    }
+                });
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (treeListener != null) {
+            treeListener.remove();
+        }
+    }
+    private String getStatsShareText() {
+        String totalHours = textViewMyTotalHours.getText().toString();
+        String streak = textViewMyStreak.getText().toString();
+        String weekTotal = textViewWeekTotal.getText().toString();
+        String monthTotal = textViewMonthTotal.getText().toString();
+
+        return String.format(Locale.getDefault(),
+                "📊 Моя статистика в Zen Tree!\n\n" +
+                        "🌳 Всего часов: %s\n" +
+                        "🔥 Дней подряд: %s\n" +
+                        "📈 %s\n" +
+                        "📅 %s\n\n" +
+                        "#ZenTree #Focus #Statistics",
+                totalHours, streak, weekTotal, monthTotal);
+    }
+    private Bitmap takeScreenshot(View view) {
+        view.setDrawingCacheEnabled(true);
+        Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
+        view.setDrawingCacheEnabled(false);
+        return bitmap;
+    }
+    private String saveBitmapToCache(Bitmap bitmap) {
+        try {
+            File cacheDir = requireContext().getCacheDir();
+            File file = new File(cacheDir, "stats_share_" + System.currentTimeMillis() + ".png");
+            FileOutputStream out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    private void shareStats() {
+        View rootView = getView();
+        if (rootView == null) return;
+
+        Bitmap screenshot = takeScreenshot(rootView);
+        if (screenshot == null) return;
+
+        String path = saveBitmapToCache(screenshot);
+        if (path == null) return;
+
+        String shareText = getStatsShareText();
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("image/png");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(
+                requireContext(),
+                requireContext().getPackageName() + ".fileprovider",
+                new File(path)
+        ));
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_stats_title)));
     }
 
     private void loadMyStats() {
@@ -112,7 +199,13 @@ public class StatisticsFragment extends Fragment {
                     textViewMyStreak.setText(currentStreak + " дн.");
                 });
     }
-
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadMyStats();
+        loadWeekStats();
+        loadMonthStats();
+    }
     private void loadWeekStats() {
         if (currentUserId == null) return;
 

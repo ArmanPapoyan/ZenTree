@@ -210,4 +210,6 @@
     <string name="stats_tasks_completed">✅ %d</string>
     <string name="stats_tree_level">🌳 %d</string>
     <string name="stats_focus_hours_label">Часы фокуса</string>
+    <string name="share_stats_title">Поделиться статистикой</string>
+    <string name="test_user">Тест Пользователь</string>
 </resources>

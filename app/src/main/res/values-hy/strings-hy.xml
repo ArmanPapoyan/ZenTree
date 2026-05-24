@@ -386,4 +386,6 @@
     <string name="stats_tasks_completed">✅ %d</string>
     <string name="stats_tree_level">🌳 %d</string>
     <string name="stats_focus_hours_label">Ֆոկուսի ժամեր</string>
+    <string name="share_stats_title">Կիսվել արդյունքով</string>
+    <string name="test_user">Փորձնական օգտատեր</string>
 </resources>

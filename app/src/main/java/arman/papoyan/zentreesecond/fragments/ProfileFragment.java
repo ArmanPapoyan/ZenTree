@@ -5,13 +5,13 @@ import static android.content.Context.MODE_PRIVATE;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,7 +48,6 @@ public class ProfileFragment extends Fragment {
     private TextView textViewName;
     private TextView textViewEmail;
     private SharedPreferences prefs;
-    private boolean isGuest;
     private SharedPreferences themePrefs;
     private Button deleteButton;
     private Button btnThemeSystem, btnThemeLight, btnThemeDark;
@@ -63,7 +62,6 @@ public class ProfileFragment extends Fragment {
         Button out = view.findViewById(R.id.button_logout);
         deleteButton = view.findViewById(R.id.button_delete);
         prefs = getActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
-        isGuest = prefs.getBoolean("is_guest", false);
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
         btnThemeSystem = view.findViewById(R.id.btn_theme_system);
@@ -78,12 +76,6 @@ public class ProfileFragment extends Fragment {
         btnLangArmenian.setOnClickListener(v -> setLanguage("hy"));
 
         displayUserInfo(user);
-
-        if (isGuest || (user != null && user.isAnonymous())) {
-            deleteButton.setVisibility(View.GONE);
-        } else {
-            deleteButton.setVisibility(View.VISIBLE);
-        }
         out.setOnClickListener(v -> logout());
 
         btnThemeSystem.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM));
@@ -112,18 +104,17 @@ public class ProfileFragment extends Fragment {
     }
     private void setThemeMode(int mode) {
         themePrefs.edit().putInt("night_mode", mode).apply();
+        SharedPreferences loginPrefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+        String userId = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
         AppCompatDelegate.setDefaultNightMode(mode);
-
-        if (getActivity() instanceof MainActivity) {
-            int currentNavId = ((MainActivity) getActivity()).getCurrentNavItemId();
-            Intent intent = requireActivity().getIntent();
-            intent.putExtra("selected_nav_id", currentNavId);
-        }
+        Intent intent = requireActivity().getIntent();
+        intent.putExtra("was_logged_in",userId != null);
+        intent.putExtra("selected_nav_id", ((MainActivity) getActivity()).getCurrentNavItemId());
 
         requireActivity().finish();
-        startActivity(requireActivity().getIntent());
+        startActivity(intent);
     }
-
     private void showPasswordDialog() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
@@ -166,68 +157,52 @@ public class ProfileFragment extends Fragment {
                     Toast.makeText(getActivity(), getString(R.string.error_invalid_password, e.getMessage()), Toast.LENGTH_LONG).show();
                 });
     }
-    private void showDeleteDialog(){
+    private void showDeleteDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(getString(R.string.dialog_title_delete_account))
                 .setMessage(R.string.delete_text)
-                .setPositiveButton(getString(R.string.action_delete), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        if (user == null) {
-                            return;
+                .setPositiveButton(getString(R.string.action_delete), (dialog, which) -> {
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if (user == null) return;
+
+                    String userId = user.getUid();
+                    ProgressDialog progressDialog = new ProgressDialog(getActivity());
+                    progressDialog.setMessage(getString(R.string.progress_deleting_account));
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
+
+                    deleteAllUserDataFromFirestore(userId, new OnDataDeletedListener() {
+                        @Override
+                        public void onDataDeleted() {
+                            user.delete()
+                                    .addOnSuccessListener(aVoid -> {
+                                        prefs.edit().clear().apply();
+                                        FirebaseAuth.getInstance().signOut();
+                                        progressDialog.dismiss();
+                                        goToLoginFragment();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        progressDialog.dismiss();
+                                        Toast.makeText(getActivity(), getString(R.string.error_delete_account_failed, e.getMessage()), Toast.LENGTH_LONG).show();
+                                    });
                         }
-                        String userId = user.getUid();
-                        ProgressDialog progressDialog = new ProgressDialog(getActivity());
-                        progressDialog.setMessage(getString(R.string.progress_deleting_account));
-                        progressDialog.setCancelable(false);
-                        progressDialog.show();
-                        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-                        NotificationCleaner.clearAllNotifications(requireContext());
-
-                        db.collection("tasks").document(userId).collection("userTasks")
-                                .get()
-                                .addOnSuccessListener(queryDocumentSnapshots -> {
-                                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                                        document.getReference().delete();
-                                    }
-                                    db.collection("users").document(userId).collection("tree").document("progress")
-                                            .delete()
-                                            .addOnSuccessListener(aVoid -> {
-                                                user.delete()
-                                                        .addOnSuccessListener(aVoid2 -> {
-                                                            prefs.edit().clear().apply();
-                                                            FirebaseAuth.getInstance().signOut();
-                                                            progressDialog.dismiss();
-                                                            goToLoginFragment();
-                                                        })
-                                                        .addOnFailureListener(e -> {
-                                                            progressDialog.dismiss();
-                                                            Toast.makeText(getActivity(), getString(R.string.error_delete_account_failed, e.getMessage()), Toast.LENGTH_LONG).show();
-                                                        });
-                                            })
-                                            .addOnFailureListener(e -> {
-                                                progressDialog.dismiss();
-                                                Toast.makeText(getActivity(), getString(R.string.error_delete_tree_failed, e.getMessage()), Toast.LENGTH_LONG).show();
-                                            });
-                                })
-                                .addOnFailureListener(e -> {
-                                    progressDialog.dismiss();
-                                    Toast.makeText(getActivity(), getString(R.string.error_fetch_tasks_failed, e.getMessage()), Toast.LENGTH_LONG).show();
-                                });
-                    }
+                        @Override
+                        public void onError(Exception e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(getActivity(), getString(R.string.error_delete_failed_with_msg, e.getMessage()), Toast.LENGTH_LONG).show();
+                        }
+                    });
                 })
                 .setNegativeButton(getString(R.string.action_cancel), (dialog, which) -> dialog.dismiss())
                 .setCancelable(false);
 
         AlertDialog dialog = builder.create();
         dialog.show();
-
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED);
     }
     private void displayUserInfo(FirebaseUser user) {
-        if (user != null && !user.isAnonymous()) {
+        if (user != null) {
             textViewEmail.setText(user.getEmail());
             String displayName = user.getDisplayName();
             if (displayName != null && !displayName.isEmpty()) {
@@ -235,9 +210,6 @@ public class ProfileFragment extends Fragment {
             } else {
                 textViewName.setText(getString(R.string.user_info_not_specified));
             }
-        } else if (isGuest) {
-            textViewName.setText(getString(R.string.user_info_guest));
-            textViewEmail.setText(getString(R.string.user_info_guest_mode));
         } else {
             textViewName.setText(getString(R.string.user_info_not_authorized));
             textViewEmail.setText(getString(R.string.user_info_not_authorized));
@@ -279,12 +251,19 @@ public class ProfileFragment extends Fragment {
         }
 
         prefs.edit().clear().apply();
+
+        SharedPreferences treePrefs =
+                requireActivity().getSharedPreferences("ZenTreePrefs", MODE_PRIVATE);
+        treePrefs.edit().clear().apply();
+
         mAuth.signOut();
+
         NotificationCleaner.clearAllNotifications(requireContext());
 
         Intent intent = new Intent(getActivity(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.putExtra("logout", true);
+
         startActivity(intent);
 
         requireActivity().finish();
@@ -344,37 +323,83 @@ public class ProfileFragment extends Fragment {
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        NotificationCleaner.clearAllNotifications(requireContext());
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-
-        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
-
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            user.delete()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            googleSignInClient.revokeAccess()
-                                    .addOnCompleteListener(revokeTask -> {
-                                        progressDialog.dismiss();
-                                        if (revokeTask.isSuccessful()) {
-                                            deleteUserDataFromFirestore();
+        if (user == null) {
+            progressDialog.dismiss();
+            return;
+        }
+
+        String userId = user.getUid();
+
+        deleteAllUserDataFromFirestore(userId, new OnDataDeletedListener() {
+            @Override
+            public void onDataDeleted() {
+                user.delete()
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                        .requestIdToken(getString(R.string.default_web_client_id))
+                                        .requestEmail()
+                                        .build();
+                                GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
+                                googleSignInClient.revokeAccess()
+                                        .addOnCompleteListener(revokeTask -> {
+                                            progressDialog.dismiss();
                                             Toast.makeText(getContext(), getString(R.string.toast_account_deleted), Toast.LENGTH_SHORT).show();
                                             navigateToLogin();
-                                        } else {
-                                            Toast.makeText(getContext(), getString(R.string.error_google_revoke_failed), Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                        } else {
-                            progressDialog.dismiss();
-                            Toast.makeText(getContext(), getString(R.string.error_delete_failed_with_msg, task.getException().getMessage()), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-        }
+                                        });
+                            } else {
+                                progressDialog.dismiss();
+                                Toast.makeText(getContext(), getString(R.string.error_delete_account_failed, task.getException().getMessage()), Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                progressDialog.dismiss();
+                Toast.makeText(getContext(), getString(R.string.error_delete_failed_with_msg, e.getMessage()), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    interface OnDataDeletedListener {
+        void onDataDeleted();
+        void onError(Exception e);
+    }
+    private void deleteAllUserDataFromFirestore(String userId, OnDataDeletedListener listener) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("tasks").document(userId).collection("userTasks")
+                .get()
+                .addOnSuccessListener(tasks -> {
+                    for (QueryDocumentSnapshot task : tasks) {
+                        task.getReference().delete();
+                    }
+                    db.collection("users").document(userId).collection("stats")
+                            .get()
+                            .addOnSuccessListener(stats -> {
+                                for (QueryDocumentSnapshot stat : stats) {
+                                    stat.getReference().delete();
+                                }
+                                db.collection("users").document(userId).collection("tree")
+                                        .get()
+                                        .addOnSuccessListener(trees -> {
+                                            for (QueryDocumentSnapshot tree : trees) {
+                                                tree.getReference().delete();
+                                            }
+                                            db.collection("users").document(userId)
+                                                    .delete()
+                                                    .addOnSuccessListener(aVoid -> {
+                                                        Log.d("Delete", "Все данные пользователя удалены из Firestore");
+                                                        listener.onDataDeleted();
+                                                    })
+                                                    .addOnFailureListener(listener::onError);
+                                        })
+                                        .addOnFailureListener(listener::onError);
+                            })
+                            .addOnFailureListener(listener::onError);
+                })
+                .addOnFailureListener(listener::onError);
     }
 
     private void navigateToLogin() {

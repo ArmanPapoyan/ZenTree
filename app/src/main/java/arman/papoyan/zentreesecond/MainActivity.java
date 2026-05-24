@@ -83,6 +83,12 @@ public class MainActivity extends AppCompatActivity {
 
         bottomNav = findViewById(R.id.bottom_navigation);
 
+        boolean keepLogin = getIntent().getBooleanExtra("keep_login", false);
+        if (keepLogin) {
+            getIntent().removeExtra("keep_login");
+        }
+
+
         if (savedInstanceState != null) {
             currentNavItemId = savedInstanceState.getInt(KEY_NAV_ITEM, R.id.nav_home);
         } else {
@@ -152,11 +158,29 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(currentFragment, false);
             return;
         }
+        if (!keepLogin) {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (currentUser != null) {
+                bottomNav.setVisibility(View.VISIBLE);
+            } else {
+                bottomNav.setVisibility(View.GONE);
+                currentFragment = new LoginFragment();
+                loadFragment(currentFragment, false);
+            }
+        } else {
+            bottomNav.setVisibility(View.VISIBLE);
+            int savedNavId = getIntent().getIntExtra("selected_nav_id", R.id.nav_home);
+            Fragment fragment = getFragmentForNavItem(savedNavId);
+            currentFragment = fragment;
+            loadFragment(fragment, false);
+            bottomNav.setSelectedItemId(savedNavId);
+        }
+
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        boolean isGuest = prefs.getBoolean("is_guest", false);
 
-        if (isGuest || currentUser != null) {
+        if (currentUser != null) {
             if (bottomNav != null) {
                 bottomNav.setVisibility(View.VISIBLE);
             }

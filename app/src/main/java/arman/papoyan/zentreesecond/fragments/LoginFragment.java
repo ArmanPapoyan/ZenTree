@@ -2,6 +2,7 @@ package arman.papoyan.zentreesecond.fragments;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -52,7 +53,7 @@ public class LoginFragment extends Fragment {
 
         Button buttonLogin = view.findViewById(R.id.button_login);
         Button buttonRegister = view.findViewById(R.id.button_register);
-        Button buttonGuest = view.findViewById(R.id.guest);
+        Button btnTestUser = view.findViewById(R.id.test_user);
         editTextEmail = view.findViewById(R.id.edit_text_email);
         editTextPassword = view.findViewById(R.id.edit_text_password);
         checkBoxRememberMe = view.findViewById(R.id.checkBox_remember_me);
@@ -133,53 +134,33 @@ public class LoginFragment extends Fragment {
             editTextPassword.setText(savedPassword);
             checkBoxRememberMe.setChecked(true);
         }
-        buttonGuest.setOnClickListener(v -> {
-            Guest();
+        btnTestUser.setOnClickListener(v -> {
+            ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setMessage("Вход как Test User...");
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+
+            FirebaseAuth.getInstance()
+                    .signInWithEmailAndPassword("innovationcampus26@gmail.com", "@Test1")
+                    .addOnCompleteListener(task -> {
+                        progressDialog.dismiss();
+
+                        if (task.isSuccessful()) {
+                            SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
+                            prefs.edit().putBoolean("is_guest", false).apply();
+
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            requireActivity().finish();
+                        } else {
+                            Toast.makeText(getContext(), "Test login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
         });
         return view;
     }
 
-    private void Guest() {
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null && currentUser.isAnonymous()) {
-            currentUser.delete().addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    createNewAnonymousUser();
-                } else {
-                    createNewAnonymousUser();
-                }
-            });
-        } else {
-            createNewAnonymousUser();
-        }
-    }
-    private void createNewAnonymousUser() {
-        mAuth.signInAnonymously()
-                .addOnCompleteListener(requireActivity(), task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        if (user != null) {
-                            SharedPreferences prefs = requireActivity().getSharedPreferences("login_prefs", MODE_PRIVATE);
-                            prefs.edit()
-                                    .putBoolean("is_guest", true)
-                                    .putString("guest_uid", user.getUid())
-                                    .apply();
-                            TreeModel newTree = new TreeModel();
-                            TreeManager treeManager = new TreeManager(getActivity());
-                            treeManager.saveTree(newTree);
-                            Toast.makeText(requireActivity(), getString(R.string.toast_guest_logged_in), Toast.LENGTH_SHORT).show();
-                            MainActivity activity = (MainActivity) getActivity();
-                            if (activity != null) {
-                                activity.goToHomeAfterLogin();
-                            }
-                        }
-                    } else {
-                        Exception e = task.getException();
-                        Log.e("AUTH_ERROR", e.getMessage());
-                        Toast.makeText(requireActivity(), getString(R.string.error_with_message, e.getMessage()), Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

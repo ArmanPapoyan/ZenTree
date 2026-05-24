@@ -1,88 +1,154 @@
 package arman.papoyan.zentreesecond.models;
 
-public class TreeModel {
-    private int level = 1;
-    private int totalMinutes = 0;
-    private int currentStage = 1;
-    private int progressInCurrentStage = 0;
-    private long growthStartTime = 0;
-    private boolean isGrowing = false;
-    private String userId;
-    private String lastUpdateDate = "";
+import java.io.Serializable;
 
-    public int getLevel() { return level; }
-    public int getTotalMinutes() { return totalMinutes; }
-    public int getCurrentStage() { return currentStage; }
-    public int getProgressPercentage() { return progressInCurrentStage; }
-    public boolean isGrowing() { return isGrowing; }
-    public String getLastUpdateDate() { return lastUpdateDate; }
+public class TreeModel implements Serializable {
+    private int totalMinutes;
+    private int level;
+    private int currentStage;
+    private int progressInCurrentStage;
+    private int progressPercentage;
+    private boolean isGrowing;
+    private String lastUpdateDate;
 
-    public void setLevel(int level) { this.level = level; }
-    public void setTotalMinutes(int totalMinutes) { this.totalMinutes = totalMinutes; }
-    public void setCurrentStage(int currentStage) { this.currentStage = currentStage; }
-    public void setProgressInCurrentStage(int progress) { this.progressInCurrentStage = progress; }
-    public void setLastUpdateDate(String date) { this.lastUpdateDate = date; }
-
-    public void setBonusMinutes(int minutes) {
-        this.totalMinutes += minutes;
-        int newLevel = totalMinutes / 60;
-        if (newLevel > level) {
-            level = newLevel;
-        }
-        int newStage = Math.min(level, 6);
-        if (newStage > currentStage) {
-            currentStage = newStage;
-        }
+    public TreeModel() {
+        this.totalMinutes = 0;
+        this.level = 1;
+        this.currentStage = 1;
+        this.progressInCurrentStage = 0;
+        this.progressPercentage = 0;
+        this.isGrowing = false;
+        this.lastUpdateDate = "";
     }
 
-    public void addMinutes(int minutes, int x, float motivation) {
-        int currentStageForCalc = Math.min(currentStage, 5);
-        int neededForCurrentStage = (int) (x * motivation * currentStageForCalc);
-
-        float percentPerMinute = 100f / neededForCurrentStage;
-        int percentToAdd = (int) (minutes * percentPerMinute);
-
-        progressInCurrentStage += percentToAdd;
-        totalMinutes += minutes;
-
-        if (progressInCurrentStage >= 100) {
-            progressInCurrentStage = 0;
-            currentStage++;
-            if (currentStage > 6) currentStage = 6;
-        }
-
-        level = currentStage;
+    public TreeModel(int totalMinutes, int level, int currentStage, int progressInCurrentStage, int progressPercentage) {
+        this.totalMinutes = totalMinutes;
+        this.level = level;
+        this.currentStage = currentStage;
+        this.progressInCurrentStage = progressInCurrentStage;
+        this.progressPercentage = progressPercentage;
+        this.isGrowing = false;
+        this.lastUpdateDate = "";
     }
 
-    public void addBonusMinutes(int minutes) {
-        this.totalMinutes += minutes;
-        int newLevel = totalMinutes / 60;
-        if (newLevel > level) {
-            level = newLevel;
-        }
-        int newStage = Math.min(level, 6);
-        if (newStage > currentStage) {
-            currentStage = newStage;
-        }
+    public int getTotalMinutes() {
+        return totalMinutes;
+    }
+
+    public void setTotalMinutes(int totalMinutes) {
+        this.totalMinutes = totalMinutes;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public int getCurrentStage() {
+        return currentStage;
+    }
+
+    public void setCurrentStage(int currentStage) {
+        this.currentStage = currentStage;
+    }
+
+    public int getProgressInCurrentStage() {
+        return progressInCurrentStage;
+    }
+
+    public void setProgressInCurrentStage(int progressInCurrentStage) {
+        this.progressInCurrentStage = progressInCurrentStage;
+    }
+
+    public int getProgressPercentage() {
+        return progressPercentage;
+    }
+
+    public void setProgressPercentage(int progressPercentage) {
+        this.progressPercentage = progressPercentage;
+    }
+
+    public boolean isGrowing() {
+        return isGrowing;
+    }
+
+    public void setGrowing(boolean growing) {
+        isGrowing = growing;
+    }
+
+    public String getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(String lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 
     public void startGrowth() {
-        isGrowing = true;
-        growthStartTime = System.currentTimeMillis();
+        this.isGrowing = true;
     }
 
     public void stopGrowth() {
-        if (isGrowing) {
-            isGrowing = false;
-            long growthDuration = System.currentTimeMillis() - growthStartTime;
-        }
+        this.isGrowing = false;
     }
 
-    public void resetToDefault(String today) {
-        this.level = 1;
+    public void addMinutes(int minutes, int x, float motivation) {
+        this.totalMinutes += minutes;
+        recalculateProgress(this.totalMinutes, x, motivation);
+    }
+
+    public void recalculateProgress(int totalMinutes, int x, float motivation) {
+        this.totalMinutes = totalMinutes;
+        int remainingMinutes = totalMinutes;
+        int stage = 1;
+        int progressInStage = 0;
+
+        while (stage < 6) {
+            int neededForStage = (int) (x * motivation * stage);
+            if (remainingMinutes >= neededForStage) {
+                remainingMinutes -= neededForStage;
+                stage++;
+            } else {
+                progressInStage = remainingMinutes;
+                remainingMinutes = 0;
+                break;
+            }
+        }
+
+        if (stage <= 6) {
+            this.currentStage = stage;
+            this.progressInCurrentStage = progressInStage;
+            int neededForCurrent = (int) (x * motivation * stage);
+            if (neededForCurrent > 0) {
+                this.progressPercentage = (progressInStage * 100) / neededForCurrent;
+            } else {
+                this.progressPercentage = 0;
+            }
+        } else {
+            this.currentStage = 6;
+            this.progressPercentage = 100;
+        }
+
+        this.level = ((this.currentStage - 1) / 6) + 1;
+    }
+
+    public void resetToDefault(String todayDate) {
         this.totalMinutes = 0;
+        this.level = 1;
         this.currentStage = 1;
         this.progressInCurrentStage = 0;
-        this.lastUpdateDate = today;
+        this.progressPercentage = 0;
+        this.isGrowing = false;
+        this.lastUpdateDate = todayDate;
+    }
+    public void addBonusMinutes(int bonusMinutes) {
+        int x = 60;
+        float motivation = 1.0f;
+
+        this.totalMinutes += bonusMinutes;
+        recalculateProgress(this.totalMinutes, x, motivation);
     }
 }

@@ -16,45 +16,33 @@ import arman.papoyan.zentreesecond.models.TreeModel;
 public class TreeManager {
     private static final String PREFS_NAME = "ZenTreePrefs";
     private static final String KEY_TOTAL_MINUTES = "total_minutes";
+    private static final String KEY_TREE_LEVEL = "tree_level";
+    private static final String KEY_CURRENT_STAGE = "current_stage";
 
     private SharedPreferences prefs;
     private SharedPreferences loginPrefs;
     private TreeModel currentTree;
     private TreeFirestoreManager firestoreManager;
     private boolean isLoaded = false;
-    private boolean isGuest;
     private Context context;
+
     public TreeManager(Context context) {
+        this.context = context;
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         loginPrefs = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE);
         firestoreManager = new TreeFirestoreManager();
         currentTree = new TreeModel();
-        isGuest = loginPrefs.getBoolean("is_guest", false);
-        this.context = context;
     }
 
     public void saveTree(TreeModel tree) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(KEY_TOTAL_MINUTES, tree.getTotalMinutes());
+        editor.putInt(KEY_TREE_LEVEL, tree.getLevel());
+        editor.putInt(KEY_CURRENT_STAGE, tree.getCurrentStage());
         editor.apply();
         currentTree = tree;
-
-        if (!isGuest) {
-            firestoreManager.saveTree(tree, new TreeFirestoreManager.TreeSaveCallback() {
-                @Override
-                public void onSuccess() {
-                    Log.d("TreeManager", "Сохранено в Firestore");
-                    SyncQueueManager.getInstance(context).clearPendingTree();
-                }
-
-                @Override
-                public void onError(String error) {
-                    Log.e("TreeManager", "Ошибка сохранения в Firestore: " + error);
-                    saveTreeToQueue(tree);
-                }
-            });
-        }
     }
+
     private void saveTreeToQueue(TreeModel tree) {
         if (context == null) return;
 
@@ -76,37 +64,34 @@ public class TreeManager {
         }
     }
 
-
     public TreeModel loadTree() {
-        if (isLoaded) {
+        Log.d("TreeManager", "Loading tree, isLoaded=" + isLoaded);
+
+        if (isLoaded && currentTree != null) {
             return currentTree;
         }
-        int savedMinutes = prefs.getInt(KEY_TOTAL_MINUTES, 0);
-        if (savedMinutes > 0) {
-            int defaultX = 60;
-            float defaultMotivation = 1.0f;
-            currentTree.addMinutes(savedMinutes, defaultX, defaultMotivation);
-        }
-        if (!isGuest) {
-            firestoreManager.loadTree(new TreeFirestoreManager.TreeLoadCallback() {
-                @Override
-                public void onSuccess(TreeModel tree) {
-                    currentTree = tree;
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putInt(KEY_TOTAL_MINUTES, tree.getTotalMinutes());
-                    editor.apply();
-                    isLoaded = true;
-                }
 
-                @Override
-                public void onError(String error) {
-                    Log.e("TreeManager", "Ошибка загрузки из Firestore: " + error);
-                    isLoaded = true;
-                }
-            });
-        } else {
-            isLoaded = true;
+        int savedMinutes = prefs.getInt(KEY_TOTAL_MINUTES, 0);
+        int savedLevel = prefs.getInt(KEY_TREE_LEVEL, 1);
+        int savedStage = prefs.getInt(KEY_CURRENT_STAGE, 1);
+
+        if (savedMinutes > 0) {
+            currentTree.setTotalMinutes(savedMinutes);
+            currentTree.setLevel(savedLevel);
+            currentTree.setCurrentStage(savedStage);
+
+            SharedPreferences growthPrefs = context.getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
+            int x = growthPrefs.getInt("x", 60);
+            float motivation = growthPrefs.getFloat("motivation", 1.0f);
+
+            currentTree.recalculateProgress(savedMinutes, x, motivation);
         }
+
+        isLoaded = true;
+
+        Log.d("TreeManager", "Tree loaded: minutes=" + currentTree.getTotalMinutes() +
+                ", level=" + currentTree.getLevel() +
+                ", stage=" + currentTree.getCurrentStage());
 
         return currentTree;
     }
@@ -117,28 +102,18 @@ public class TreeManager {
         }
         return currentTree;
     }
+
     public void resetTree(TreeModel tree, String todayDate) {
         tree.resetToDefault(todayDate);
         this.currentTree = tree;
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(KEY_TOTAL_MINUTES, 0);
+        editor.putInt(KEY_TREE_LEVEL, 1);
+        editor.putInt(KEY_CURRENT_STAGE, 1);
         editor.apply();
-        if (!isGuest) {
-            firestoreManager.saveTree(tree, new TreeFirestoreManager.TreeSaveCallback() {
-                @Override
-                public void onSuccess() {
-                    Log.d("TreeManager", "Прогресс обнулен в Firestore");
-                }
-                @Override
-                public void onError(String error) {
-                    Log.e("TreeManager", "Ошибка при обнулении в Firestore: " + error);
-                }
-            });
-        }
     }
-    public void syncPendingTree() {
-        if (isGuest || context == null) return;
 
+    public void syncPendingTree() {
         String treeJson = SyncQueueManager.getInstance(context).getPendingTree();
         if (treeJson == null) return;
 
@@ -180,13 +155,36 @@ public class TreeManager {
             Log.e("TreeManager", "Ошибка восстановления дерева из очереди: " + e.getMessage());
         }
     }
-    public long getTotalFocusMinutes() {
-        SharedPreferences prefs = context.getSharedPreferences("tree_prefs", Context.MODE_PRIVATE);
-        return prefs.getLong("total_focus_minutes", 0);
+
+    public int getTotalFocusMinutes() {
+        return prefs.getInt(KEY_TOTAL_MINUTES, 0);
     }
 
     public int getTreeLevel() {
-        SharedPreferences prefs = context.getSharedPreferences("tree_prefs", Context.MODE_PRIVATE);
-        return prefs.getInt("tree_level", 1);
+        return prefs.getInt(KEY_TREE_LEVEL, 1);
+    }
+
+    public int getCurrentStage() {
+        return prefs.getInt(KEY_CURRENT_STAGE, 1);
+    }
+
+    public void addFocusMinutes(int minutes) {
+        int currentMinutes = prefs.getInt(KEY_TOTAL_MINUTES, 0);
+        int newMinutes = currentMinutes + minutes;
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt(KEY_TOTAL_MINUTES, newMinutes);
+        editor.apply();
+
+        if (currentTree != null) {
+            SharedPreferences growthPrefs = context.getSharedPreferences("growth_prefs", Context.MODE_PRIVATE);
+            int x = growthPrefs.getInt("x", 60);
+            float motivation = growthPrefs.getFloat("motivation", 1.0f);
+
+            currentTree.addMinutes(minutes, x, motivation);
+            saveTree(currentTree);
+        }
+
+        Log.d("TreeManager", "Добавлено " + minutes + " минут. Всего: " + newMinutes);
     }
 }

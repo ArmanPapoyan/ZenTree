@@ -160,7 +160,8 @@
                     android:cursorVisible="false"
                     android:focusable="false"
                     android:hint="@string/hint_select_time_placeholder"
-                    android:inputType="time" />
+                    android:inputType="time"
+                    />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
@@ -169,6 +170,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="@string/action_select_short"
+                android:textSize="18sp"
                 style="@style/Widget.Material3.Button.TextButton" />
         </LinearLayout>
 
