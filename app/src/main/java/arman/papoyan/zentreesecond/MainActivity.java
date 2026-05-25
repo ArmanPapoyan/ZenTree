@@ -43,11 +43,12 @@ import arman.papoyan.zentreesecond.fragments.ProfileFragment;
 import arman.papoyan.zentreesecond.fragments.RegistrationFragment;
 import arman.papoyan.zentreesecond.fragments.StatisticsFragment;
 import arman.papoyan.zentreesecond.fragments.TasksFragment;
-import arman.papoyan.zentreesecond.utils.TaskNotificationReceiver;
 import arman.papoyan.zentreesecond.services.TrackerForegroundService;
 import arman.papoyan.zentreesecond.utils.NotificationCleaner;
 import arman.papoyan.zentreesecond.utils.SyncHelper;
+import arman.papoyan.zentreesecond.utils.TaskNotificationReceiver;
 import arman.papoyan.zentreesecond.utils.TreeManager;
+import arman.papoyan.zentreesecond.views.FallingLeavesView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler returnCheckHandler = new Handler();
     private Runnable returnCheckRunnable;
     private static final String KEY_NAV_ITEM = "current_nav_item";
+    private FallingLeavesView fallingLeavesView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNav = findViewById(R.id.bottom_navigation);
+        fallingLeavesView = findViewById(R.id.falling_leaves_view);
 
         boolean keepLogin = getIntent().getBooleanExtra("keep_login", false);
         if (keepLogin) {
@@ -559,7 +562,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (fallingLeavesView != null) {
+            fallingLeavesView.startFalling();
+        }
         checkConnectivity();
         syncPendingData();
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (fallingLeavesView != null) {
+            fallingLeavesView.stopAnimation();
+        }
     }
 }

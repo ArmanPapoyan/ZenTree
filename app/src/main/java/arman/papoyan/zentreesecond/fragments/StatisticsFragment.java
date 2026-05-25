@@ -1,7 +1,9 @@
 package arman.papoyan.zentreesecond.fragments;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -93,6 +95,7 @@ public class StatisticsFragment extends Fragment {
 
         return view;
     }
+
     private void listenToTreeChanges() {
         if (currentUserId == null) return;
 
@@ -106,6 +109,7 @@ public class StatisticsFragment extends Fragment {
                     }
                 });
     }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -113,6 +117,7 @@ public class StatisticsFragment extends Fragment {
             treeListener.remove();
         }
     }
+
     private String getStatsShareText() {
         String totalHours = textViewMyTotalHours.getText().toString();
         String streak = textViewMyStreak.getText().toString();
@@ -120,20 +125,25 @@ public class StatisticsFragment extends Fragment {
         String monthTotal = textViewMonthTotal.getText().toString();
 
         return String.format(Locale.getDefault(),
-                "📊 Моя статистика в Zen Tree!\n\n" +
-                        "🌳 Всего часов: %s\n" +
-                        "🔥 Дней подряд: %s\n" +
+                "📊 %s\n\n" +
+                        "🌳 %s: %s\n" +
+                        "🔥 %s: %s\n" +
                         "📈 %s\n" +
                         "📅 %s\n\n" +
                         "#ZenTree #Focus #Statistics",
-                totalHours, streak, weekTotal, monthTotal);
+                getString(R.string.stats_my_stats),
+                getString(R.string.stats_total_hours_label), totalHours,
+                getString(R.string.stats_streak_label), streak,
+                weekTotal, monthTotal);
     }
+
     private Bitmap takeScreenshot(View view) {
         view.setDrawingCacheEnabled(true);
         Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
         view.setDrawingCacheEnabled(false);
         return bitmap;
     }
+
     private String saveBitmapToCache(Bitmap bitmap) {
         try {
             File cacheDir = requireContext().getCacheDir();
@@ -148,6 +158,7 @@ public class StatisticsFragment extends Fragment {
             return null;
         }
     }
+
     private void shareStats() {
         View rootView = getView();
         if (rootView == null) return;
@@ -181,7 +192,6 @@ public class StatisticsFragment extends Fragment {
                 .addOnSuccessListener(snapshots -> {
                     long totalMinutes = 0;
                     int currentStreak = 0;
-                    String lastDate = null;
 
                     for (QueryDocumentSnapshot doc : snapshots) {
                         FocusStats stats = doc.toObject(FocusStats.class);
@@ -195,10 +205,14 @@ public class StatisticsFragment extends Fragment {
                     }
 
                     long totalHours = totalMinutes / 60;
-                    textViewMyTotalHours.setText(String.format(Locale.getDefault(), "%d ч", totalHours));
-                    textViewMyStreak.setText(currentStreak + " дн.");
+                    String hoursText = String.format(Locale.getDefault(), getString(R.string.stats_hours_format), totalHours);
+                    textViewMyTotalHours.setText(hoursText);
+
+                    String streakText = String.format(Locale.getDefault(), getString(R.string.stats_days_format), currentStreak);
+                    textViewMyStreak.setText(streakText);
                 });
     }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -206,6 +220,7 @@ public class StatisticsFragment extends Fragment {
         loadWeekStats();
         loadMonthStats();
     }
+
     private void loadWeekStats() {
         if (currentUserId == null) return;
 
@@ -234,7 +249,8 @@ public class StatisticsFragment extends Fragment {
                     }
 
                     long weekHours = weekTotal / 60;
-                    textViewWeekTotal.setText(String.format(Locale.getDefault(), "За неделю: %d ч", weekHours));
+                    String weekText = String.format(Locale.getDefault(), getString(R.string.stats_week_prefix), weekHours);
+                    textViewWeekTotal.setText(weekText);
 
                     setupBarChart(entries, dates);
                 });
@@ -259,14 +275,27 @@ public class StatisticsFragment extends Fragment {
                         monthTotal += stats.getFocusMinutes();
                     }
                     long monthHours = monthTotal / 60;
-                    textViewMonthTotal.setText(String.format(Locale.getDefault(), "За месяц: %d ч", monthHours));
+                    String monthText = String.format(Locale.getDefault(), getString(R.string.stats_month_prefix), monthHours);
+                    textViewMonthTotal.setText(monthText);
                 });
     }
 
     private void setupBarChart(List<BarEntry> entries, List<String> dates) {
-        BarDataSet dataSet = new BarDataSet(entries, "Часы фокуса");
+        if (entries.isEmpty()) {
+            barChart.clear();
+            barChart.invalidate();
+            return;
+        }
+
+        BarDataSet dataSet = new BarDataSet(entries, getString(R.string.stats_focus_hours_label));
         dataSet.setColor(getResources().getColor(R.color.primary_green));
-        dataSet.setValueTextSize(10f);
+        dataSet.setValueTextSize(12f);
+
+        if (isDarkMode()) {
+            dataSet.setValueTextColor(Color.WHITE);
+        } else {
+            dataSet.setValueTextColor(Color.BLACK);
+        }
 
         BarData barData = new BarData(dataSet);
         barData.setBarWidth(0.9f);
@@ -274,6 +303,18 @@ public class StatisticsFragment extends Fragment {
         barChart.setData(barData);
         barChart.setFitBars(true);
         barChart.getDescription().setEnabled(false);
+        barChart.setBackgroundColor(Color.TRANSPARENT);
+
+        if (isDarkMode()) {
+            barChart.getXAxis().setTextColor(Color.WHITE);
+            barChart.getAxisLeft().setTextColor(Color.WHITE);
+            barChart.getLegend().setTextColor(Color.WHITE);
+        } else {
+            barChart.getXAxis().setTextColor(Color.BLACK);
+            barChart.getAxisLeft().setTextColor(Color.BLACK);
+            barChart.getLegend().setTextColor(Color.BLACK);
+        }
+
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(dates));
         barChart.getXAxis().setGranularity(1f);
         barChart.getXAxis().setPosition(com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM);
@@ -283,6 +324,11 @@ public class StatisticsFragment extends Fragment {
         barChart.invalidate();
     }
 
+    private boolean isDarkMode() {
+        int nightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return nightMode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
     private void searchUser() {
         String searchText = editTextSearch.getText().toString().trim();
         if (searchText.isEmpty()) {
@@ -290,7 +336,7 @@ public class StatisticsFragment extends Fragment {
             return;
         }
 
-        Toast.makeText(getContext(), "Поиск...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), getString(R.string.stats_searching), Toast.LENGTH_SHORT).show();
 
         db.collection("users")
                 .whereGreaterThanOrEqualTo("email", searchText)

@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ZenTree</string>
-    <string name="Q1">Յուրաքանչյուր փոքր ջանք բերում է մեծ փոփոխությունների 🌱</string>
-    <string name="Q2">Քո ֆոկուսը քո ուժն է 💪</string>
-    <string name="Q3">Ծառը աճում է քեզ հետ միասին 🌳</string>
-    <string name="Q4">Մեկ քայլ մեկ անգամ, բայց միշտ առաջ 🚶‍</string>
-    <string name="Q5">Այսօրվա սերմերը վաղվա անտառն են 🌲</string>
-    <string name="Q6">Ֆոկուսի յուրաքանչյուր րոպեն քեզ ավելի ուժեղ է դարձնում ⏰</string>
+    <string name="quote_1">🌱 Յուրաքանչյուր փոքր ջանք բերում է մեծ փոփոխությունների</string>
+    <string name="quote_2">💪 Քո ֆոկուսը քո ուժն է</string>
+    <string name="quote_3">🌳 Ծառը աճում է քեզ հետ միասին</string>
+    <string name="quote_4">🚶‍♂️ Մեկ քայլ մեկ անգամ, բայց միշտ առաջ</string>
+    <string name="quote_5">🌲 Այսօրվա սերմերը վաղվա անտառն են</string>
+    <string name="quote_6">⏰ Ֆոկուսի յուրաքանչյուր րոպեն քեզ ավելի ուժեղ է դարձնում</string>
+    <string name="quote_7">🌟 Փոքր հաղթանակները տանում են մեծ նվաճումների</string>
+    <string name="quote_8">📱 Քիչ հեռախոս — ավելի շատ կյանք</string>
+    <string name="quote_9">🧘 Հանգստությունը և կենտրոնացումը քո գերհզորություններն են</string>
+    <string name="quote_10">🎯 Նպատակը առանց պլանի պարզապես երազ է</string>
+    <string name="quote_11">💎 Ամեն օր նոր հնարավորություն է դառնալ ավելի լավը</string>
+    <string name="quote_12">🌈 Ֆոկուս այսօր — հաջողություն վաղը</string>
+    <string name="quote_13">🌙 Ժամանակին հանգստացիր, որպեսզի արդյունավետ լինես</string>
+    <string name="quote_14">🔥 Ամեն օր մի փոքր քայլ մեծ առաջընթաց է</string>
+    <string name="quote_15">🍃 Անջատվիր աշխարհից, որպեսզի գտնես քեզ</string>
     <string name="accessibility_service_description"> </string>
     <string name="delete_text">Վստա՞հ եք, որ ցանկանում եք ջնջել հաշիվը։ Այս գործողությունը անդառնալի է — ձեր բոլոր տվյալները, կարգավորումները և պատմությունը կջնջվեն ընդմիշտ։</string>
     <string name="password_text">Շարունակելու համար մուտքագրեք ձեր գաղտնաբառը։ Սա անհրաժեշտ է հաստատելու համար, որ գործողությունը կատարում եք հենց դուք։</string>
@@ -230,8 +239,6 @@
 
     <string name="stats_section_title">Վիճակագրություն</string>
 
-    <string name="stats_streak_label">Շարունակական օրեր</string>
-
     <string name="stats_total_hours_label">Ընդհանուր ժամեր</string>
 
     <string name="action_delete_account">Ջնջել հաշիվը</string>
@@ -317,7 +324,7 @@
     <string name="stats_search_error">Սխալ որոնման ժամանակ</string>
     <string name="stats_enter_email">Մուտքագրեք էլ. հասցեն</string>
     <string name="stats_detail_title">📋 Մանրամասն վիճակագրություն</string>
-    <string name="stats_focus_hours">%d ժ %d ր</string>
+    <string name="stats_focus_hours" formatted="false">%d ժ %d ր</string>
     <string name="stats_tasks_completed">✅ %d</string>
     <string name="stats_tree_level">🌳 %d</string>
     <string name="stats_focus_hours_label">Ֆոկուսի ժամեր</string>
@@ -366,4 +373,10 @@
     <string name="email_already_in_use">Էլ. հասցեն արդեն օգտագործվում է</string>
     <string name="google_registration_wait">Գրանցում Google-ով...</string>
     <string name="test_user_login">Test User</string>
+    <string name="stats_week_prefix">Շաբաթում՝ %d ժ</string>
+    <string name="stats_month_prefix">Ամսում՝ %d ժ</string>
+    <string name="stats_streak_label">Օրեր անընդմեջ</string>
+    <string name="stats_searching">Որոնում...</string>
+    <string name="stats_hours_format">%d ժ</string>
+    <string name="stats_days_format">%d օր</string>
 </resources>

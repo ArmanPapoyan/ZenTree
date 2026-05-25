@@ -78,7 +78,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     private SharedPreferences notificationPrefs;
     private FirebaseFirestore db;
     private String userId;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
@@ -91,7 +90,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         treeProgressBar = view.findViewById(R.id.tree_progress_bar);
         textViewTime = view.findViewById(R.id.text_view_time);
         textViewProgress = view.findViewById(R.id.text_view_progress);
-
         treeManager = new TreeManager(requireContext());
         tree = treeManager.loadTree();
 
@@ -432,10 +430,25 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
     private void updateMotivationText() {
         String[] motivations = {
-                getString(R.string.Q1), getString(R.string.Q2), getString(R.string.Q3),
-                getString(R.string.Q4), getString(R.string.Q5), getString(R.string.Q6)
+                getString(R.string.quote_1), getString(R.string.quote_2),
+                getString(R.string.quote_3), getString(R.string.quote_4),
+                getString(R.string.quote_5), getString(R.string.quote_6),
+                getString(R.string.quote_7), getString(R.string.quote_8),
+                getString(R.string.quote_9), getString(R.string.quote_10),
+                getString(R.string.quote_11), getString(R.string.quote_12),
+                getString(R.string.quote_13), getString(R.string.quote_14),
+                getString(R.string.quote_15)
         };
-        motivationText.setText(motivations[new Random().nextInt(motivations.length)]);
+
+        motivationText.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .withEndAction(() -> {
+                    String newQuote = motivations[new Random().nextInt(motivations.length)];
+                    motivationText.setText(newQuote);
+                    motivationText.animate().alpha(1f).setDuration(300).start();
+                })
+                .start();
     }
 
     @Override

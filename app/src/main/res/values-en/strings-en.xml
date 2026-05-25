@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ZenTree</string>
-    <string name="Q1">Every small effort leads to big changes 🌱</string>
-    <string name="Q2">Your focus is your strength 💪</string>
-    <string name="Q3">The tree grows together with you 🌳</string>
-    <string name="Q4">One step at a time, but always forward 🚶‍</string>
-    <string name="Q5">Today\'s seeds are tomorrow\'s forest 🌲</string>
-    <string name="Q6">Every minute of focus makes you stronger ⏰</string>
+    <string name="quote_1">🌱 Every small effort leads to big changes</string>
+    <string name="quote_2">💪 Your focus is your strength</string>
+    <string name="quote_3">🌳 The tree grows with you</string>
+    <string name="quote_4">🚶‍♂️ One step at a time, but always forward</string>
+    <string name="quote_5">🌲 Today\'s seeds are tomorrow\'s forest</string>
+    <string name="quote_6">⏰ Every minute of focus makes you stronger</string>
+    <string name="quote_7">🌟 Small victories lead to great achievements</string>
+    <string name="quote_8">📱 Less phone — more life</string>
+    <string name="quote_9">🧘 Calmness and focus are your superpowers</string>
+    <string name="quote_10">🎯 A goal without a plan is just a dream</string>
+    <string name="quote_11">💎 Every day is a new opportunity to become better</string>
+    <string name="quote_12">🌈 Focus today — success tomorrow</string>
+    <string name="quote_13">🌙 Rest in time to be productive</string>
+    <string name="quote_14">🔥 A small step every day is big progress</string>
+    <string name="quote_15">🍃 Disconnect from the world to find yourself</string>
     <string name="accessibility_service_description"> </string>
     <string name="delete_text">Are you sure you want to delete your account? This action is irreversible — all your data, settings, and history will be permanently deleted.</string>
     <string name="password_text">To continue, enter your account password. This is required to confirm that you are performing this action.</string>
@@ -219,8 +228,6 @@
 
     <string name="stats_section_title">Statistics</string>
 
-    <string name="stats_streak_label">Streak days</string>
-
     <string name="stats_total_hours_label">Total hours</string>
 
     <string name="action_delete_account">Delete account</string>
@@ -352,8 +359,7 @@
     <string name="stats_search_error">Search error</string>
     <string name="stats_enter_email">Enter email to search</string>
     <string name="stats_detail_title">📋 Detailed Statistics</string>
-    <string name="stats_focus_hours">%d h %d min</string>
-    <string name="stats_tasks_completed">✅ %d</string>
+    <string name="stats_focus_hours" formatted="false">%d h %d min</string>    <string name="stats_tasks_completed">✅ %d</string>
     <string name="stats_tree_level">🌳 %d</string>
     <string name="stats_focus_hours_label">Focus Hours</string>
     <string name="share_stats_title">Share stats</string>
@@ -401,4 +407,10 @@
     <string name="email_already_in_use">Email already in use</string>
     <string name="google_registration_wait">Signing up with Google...</string>
     <string name="test_user_login">Test User</string>
+    <string name="stats_week_prefix">Week total: %d h</string>
+    <string name="stats_month_prefix">Month total: %d h</string>
+    <string name="stats_streak_label">Days in row</string>
+    <string name="stats_searching">Searching...</string>
+    <string name="stats_hours_format">%d h</string>
+    <string name="stats_days_format">%d d</string>
 </resources>
