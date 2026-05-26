@@ -1,5 +1,6 @@
 package arman.papoyan.zentreesecond.fragments;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -26,6 +27,7 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -37,12 +39,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import arman.papoyan.zentreesecond.R;
+import arman.papoyan.zentreesecond.adapter.LeaderboardAdapter;
 import arman.papoyan.zentreesecond.adapter.StatisticsAdapter;
 import arman.papoyan.zentreesecond.models.FocusStats;
+import arman.papoyan.zentreesecond.models.LeaderboardUser;
 
 public class StatisticsFragment extends Fragment {
 
@@ -54,10 +60,18 @@ public class StatisticsFragment extends Fragment {
     private ImageButton buttonSearch;
     private TextView textViewSearchResult;
     private RecyclerView recyclerViewStats;
+    private RecyclerView recyclerViewLeaderboard;
     private BarChart barChart;
+    private TabLayout tabLayoutLeaderboard;
+
     private ListenerRegistration treeListener;
     private StatisticsAdapter adapter;
     private List<FocusStats> statsList;
+
+    private LeaderboardAdapter leaderboardAdapter;
+    private List<LeaderboardUser> leaderboardUsers;
+    private int currentPeriod = 0;
+
     private FirebaseFirestore db;
     private String currentUserId;
 
@@ -74,7 +88,9 @@ public class StatisticsFragment extends Fragment {
         buttonSearch = view.findViewById(R.id.button_search);
         textViewSearchResult = view.findViewById(R.id.text_view_search_result);
         recyclerViewStats = view.findViewById(R.id.recycler_view_stats);
+        recyclerViewLeaderboard = view.findViewById(R.id.recycler_view_leaderboard);
         barChart = view.findViewById(R.id.bar_chart);
+        tabLayoutLeaderboard = view.findViewById(R.id.tab_layout_leaderboard);
 
         db = FirebaseFirestore.getInstance();
         currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null
@@ -84,16 +100,141 @@ public class StatisticsFragment extends Fragment {
         adapter = new StatisticsAdapter(statsList);
         recyclerViewStats.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewStats.setAdapter(adapter);
+
+        leaderboardUsers = new ArrayList<>();
+        leaderboardAdapter = new LeaderboardAdapter(leaderboardUsers, (userId, userName, userEmail) -> {
+            UserStatsFragment fragment = UserStatsFragment.newInstance(userId, userName, userEmail);
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        recyclerViewLeaderboard.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerViewLeaderboard.setAdapter(leaderboardAdapter);
+
+        tabLayoutLeaderboard.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                currentPeriod = tab.getPosition();
+                loadLeaderboard();
+            }
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
         ImageButton btnShareStats = view.findViewById(R.id.btn_share_stats);
         btnShareStats.setOnClickListener(v -> shareStats());
 
         loadMyStats();
         loadWeekStats();
         loadMonthStats();
+        loadLeaderboard();
 
         buttonSearch.setOnClickListener(v -> searchUser());
 
         return view;
+    }
+
+    private void loadLeaderboard() {
+        if (currentUserId == null) return;
+
+        Calendar calendar = Calendar.getInstance();
+        String startDate;
+
+        switch (currentPeriod) {
+            case 0:
+                startDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                break;
+            case 1:
+                calendar.add(Calendar.DAY_OF_YEAR, -7);
+                startDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.getTime());
+                break;
+            default:
+                calendar.add(Calendar.DAY_OF_YEAR, -30);
+                startDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.getTime());
+                break;
+        }
+
+        final String finalStartDate = startDate;
+
+        db.collection("users")
+                .limit(50)
+                .get()
+                .addOnSuccessListener(usersSnapshot -> {
+
+                    Map<String, LeaderboardUser> userMap = new HashMap<>();
+
+                    for (QueryDocumentSnapshot userDoc : usersSnapshot) {
+                        String userId = userDoc.getId();
+                        String name = userDoc.getString("name");
+                        String email = userDoc.getString("email");
+
+                        LeaderboardUser user = new LeaderboardUser();
+                        user.setUserId(userId);
+                        user.setName(name != null ? name : "User");
+                        user.setEmail(email);
+                        user.setTotalMinutes(0);
+
+                        userMap.put(userId, user);
+                    }
+
+                    final List<LeaderboardUser>[] resultList = new List[]{new ArrayList<>()};
+
+                    for (String userId : userMap.keySet()) {
+                        db.collection("users").document(userId).collection("stats")
+                                .whereGreaterThanOrEqualTo("date", finalStartDate)
+                                .get()
+                                .addOnSuccessListener(statsSnapshot -> {
+                                    LeaderboardUser user = userMap.get(userId);
+                                    long totalMinutes = 0;
+
+                                    for (QueryDocumentSnapshot statDoc : statsSnapshot) {
+                                        Long minutes = statDoc.getLong("focusMinutes");
+                                        if (minutes != null) {
+                                            totalMinutes += minutes;
+                                        }
+                                    }
+
+                                    user.setTotalMinutes(totalMinutes);
+
+                                    if (!resultList[0].contains(user)) {
+                                        resultList[0].add(user);
+                                    }
+
+                                    if (resultList[0].size() == userMap.size()) {
+                                        resultList[0].sort((a, b) -> Long.compare(b.getTotalMinutes(), a.getTotalMinutes()));
+
+                                        if (resultList[0].size() > 15) {
+                                            resultList[0] = resultList[0].subList(0, 15);
+                                        }
+
+                                        for (int i = 0; i < resultList[0].size(); i++) {
+                                            resultList[0].get(i).setRank(i + 1);
+                                        }
+
+                                        leaderboardUsers.clear();
+                                        leaderboardUsers.addAll(resultList[0]);
+                                        leaderboardAdapter.notifyDataSetChanged();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Ошибка загрузки топ-листа", Toast.LENGTH_SHORT).show();
+                    Log.e("Leaderboard", "Error: " + e.getMessage());
+                });
+    }
+    private void showUserProfile(String userId, String userName) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(userName);
+        builder.setMessage("Статистика пользователя будет доступна в следующей версии");
+        builder.setPositiveButton("OK", null);
+        builder.show();
     }
 
     private void listenToTreeChanges() {
@@ -219,6 +360,7 @@ public class StatisticsFragment extends Fragment {
         loadMyStats();
         loadWeekStats();
         loadMonthStats();
+        loadLeaderboard();
     }
 
     private void loadWeekStats() {

@@ -388,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
             if (stats == null || stats.isEmpty()) {
                 Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                 startActivity(intent);
-                Toast.makeText(this, "Разрешите доступ к использованию приложений для корректной работы фокус-режима", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.permision, Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -574,5 +574,8 @@ public class MainActivity extends AppCompatActivity {
         if (fallingLeavesView != null) {
             fallingLeavesView.stopAnimation();
         }
+    }
+    public FallingLeavesView getFallingLeavesView() {
+        return findViewById(R.id.falling_leaves_view);
     }
 }

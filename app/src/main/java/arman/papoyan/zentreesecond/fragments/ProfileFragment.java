@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,7 +71,7 @@ public class ProfileFragment extends Fragment {
         btnLangRussian = view.findViewById(R.id.btn_lang_russian);
         btnLangEnglish = view.findViewById(R.id.btn_lang_english);
         btnLangArmenian = view.findViewById(R.id.btn_lang_armenian);
-
+        ImageButton btnSettings = view.findViewById(R.id.btn_settings);
         btnLangRussian.setOnClickListener(v -> setLanguage("ru"));
         btnLangEnglish.setOnClickListener(v -> setLanguage("en"));
         btnLangArmenian.setOnClickListener(v -> setLanguage("hy"));
@@ -81,7 +82,15 @@ public class ProfileFragment extends Fragment {
         btnThemeSystem.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM));
         btnThemeLight.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_NO));
         btnThemeDark.setOnClickListener(v -> setThemeMode(AppCompatDelegate.MODE_NIGHT_YES));
-
+        btnSettings.setOnClickListener(v -> {
+            SettingsFragment settingsFragment = new SettingsFragment();
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                    .replace(R.id.fragment_container, settingsFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
         deleteButton.setOnClickListener(v -> deleteAccount());
         updateButtonHighlight();
         return view;

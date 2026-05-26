@@ -379,4 +379,30 @@
     <string name="stats_searching">Որոնում...</string>
     <string name="stats_hours_format">%d ժ</string>
     <string name="stats_days_format">%d օր</string>
+    <string name="settings">⚙️ Կարգավորումներ</string>
+    <string name="effects">🍃 Վիզուալ էֆֆեկտներ</string>
+    <string name="falling_leaves">Ընկնող տերևներ</string>
+    <string name="leaf_transparency">Տերևների թափանցիկություն</string>
+    <string name="profile">👤 Պրոֆիլ</string>
+    <string name="change_name">✏️ Փոխել անունը</string>
+    <string name="change_email">📧 Փոխել էլ. հասցեն</string>
+    <string name="change_avatar">🖼️ Փոխել ավատարը</string>
+    <string name="data">💾 Տվյալներ</string>
+    <string name="export_data">📤 Արտահանել տվյալները (CSV)</string>
+    <string name="clear_stats">🗑️ Մաքրել վիճակագրությունը</string>
+    <string name="about_app">ℹ️ Ծրագրի մասին</string>
+    <string name="app_version">Zen Tree v1.0.0</string>
+    <string name="copyright">© 2024 Zen Tree Թիմ</string>
+    <string name="leaderboard_day">🏆 Օր</string>
+    <string name="leaderboard_week">🏆 Շաբաթ</string>
+    <string name="leaderboard_month">🏆 Ամիս</string>
+    <string name="leaderboard_title">Թոփ օգտատերերը</string>
+    <string name="user_load_error">Օգտատիրոջ բեռնման սխալ</string>
+    <string name="permision">Խնդրում ենք թույլատրել հավելվածների օգտագործումը՝ կենտրոնացված ռեժիմի ճիշտ աշխատանքի համար։</string>
+    <string name="permision1">Առանց այս թույլտվության էկրանի կողպումը չի աշխատի։</string>
+    <string name="stats_hours_format_simple">ժ</string>
+    <string name="stats_days_format_simple">օր</string>
+    <string name="stats_total_days_label">Ֆոկուս օր</string>
+    <string name="stats_user_stats_title">📊 Օգտատիրոջ վիճակագրություն</string>
+
 </resources>

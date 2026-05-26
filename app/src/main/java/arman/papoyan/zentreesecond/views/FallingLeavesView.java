@@ -159,4 +159,10 @@ public class FallingLeavesView extends View {
         isRunning = true;
         invalidate();
     }
+    public void setLeafAlpha(int alpha) {
+        if (leafPaint != null) {
+            leafPaint.setAlpha(alpha);
+            invalidate();
+        }
+    }
 }
