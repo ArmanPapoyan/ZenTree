@@ -2,11 +2,13 @@ package arman.papoyan.zentreesecond.views;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
@@ -25,7 +27,8 @@ public class FallingLeavesView extends View {
     private Bitmap leafBitmap;
     private int width, height;
     private boolean isRunning = true;
-    private Drawable leafDrawable;
+    private String currentSkin;
+    private int currentAlpha = 70;
 
     private static class Leaf {
         float x, y;
@@ -49,11 +52,41 @@ public class FallingLeavesView extends View {
         leaves = new ArrayList<>();
         random = new Random();
         leafPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        leafPaint.setAlpha(50);
-        leafDrawable = ContextCompat.getDrawable(getContext(), R.drawable.leaf);
-        if (leafDrawable == null) {
-            createFallbackBitmap();
-        } else {
+
+        SharedPreferences prefs = getContext().getSharedPreferences("settings_prefs", Context.MODE_PRIVATE);
+        int savedAlphaPercent = prefs.getInt("leaves_alpha", 20);
+        currentAlpha = savedAlphaPercent * 255 / 100;
+        leafPaint.setAlpha(currentAlpha);
+
+        Log.d("FallingLeaves", "init - загружена прозрачность: " + savedAlphaPercent + "% -> alpha=" + currentAlpha);
+
+        currentSkin = prefs.getString("leaf_skin", "spring");
+
+        loadSkin();
+        createLeaves(25);
+        startAnimation();
+    }
+
+    private void loadSkin() {
+        int drawableId;
+        switch (currentSkin) {
+            case "autumn":
+                drawableId = R.drawable.leaf_autumn;
+                break;
+            case "snow":
+                drawableId = R.drawable.leaf_snow;
+                break;
+            case "rain":
+                drawableId = R.drawable.leaf_rain;
+                break;
+            default:
+                drawableId = R.drawable.leaf;
+                currentSkin = "spring";
+                break;
+        }
+
+        Drawable leafDrawable = ContextCompat.getDrawable(getContext(), drawableId);
+        if (leafDrawable != null) {
             leafBitmap = Bitmap.createBitmap(
                     leafDrawable.getIntrinsicWidth(),
                     leafDrawable.getIntrinsicHeight(),
@@ -62,11 +95,11 @@ public class FallingLeavesView extends View {
             Canvas canvas = new Canvas(leafBitmap);
             leafDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
             leafDrawable.draw(canvas);
+        } else {
+            createFallbackBitmap();
         }
-
-        createLeaves(25);
-        startAnimation();
     }
+
     private void createFallbackBitmap() {
         leafBitmap = Bitmap.createBitmap(40, 40, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(leafBitmap);
@@ -79,18 +112,26 @@ public class FallingLeavesView extends View {
     }
 
     private void createLeaves(int count) {
+        boolean isRain = currentSkin.equals("rain");
+
         for (int i = 0; i < count; i++) {
             Leaf leaf = new Leaf();
-            leaf.x = 500 + random.nextFloat() * 500;
-            leaf.y = random.nextFloat() * 2000;
+            leaf.x = random.nextFloat() * 2000;
+            leaf.y = random.nextFloat() * 3000;
             leaf.speed = 1 + random.nextFloat() * 3;
-            leaf.rotation = random.nextFloat() * 360;
-            leaf.rotationSpeed = 0.5f + random.nextFloat() * 2;
+
+            if (isRain) {
+                leaf.rotation = 0;
+                leaf.rotationSpeed = 0;
+            } else {
+                leaf.rotation = random.nextFloat() * 360;
+                leaf.rotationSpeed = 0.5f + random.nextFloat() * 2;
+            }
+
             leaf.scale = 0.4f + random.nextFloat() * 0.5f;
             leaves.add(leaf);
         }
     }
-
 
     private void startAnimation() {
         ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
@@ -107,17 +148,28 @@ public class FallingLeavesView extends View {
     }
 
     private void updateLeaves() {
+        boolean isRain = currentSkin.equals("rain");
+
         for (Leaf leaf : leaves) {
             leaf.y += leaf.speed;
-            leaf.rotation += leaf.rotationSpeed;
+
+            if (!isRain) {
+                leaf.rotation += leaf.rotationSpeed;
+            }
 
             if (leaf.y > height + 100) {
                 leaf.y = -100;
                 leaf.x = random.nextFloat() * width;
-                leaf.rotation = random.nextFloat() * 360;
+                if (!isRain) {
+                    leaf.rotation = random.nextFloat() * 360;
+                } else {
+                    leaf.rotation = 0;
+                }
             }
 
-            leaf.x += (float) (Math.sin(leaf.y / 150) * 0.5f);
+            if (!isRain) {
+                leaf.x += (float) (Math.sin(leaf.y / 150) * 0.5f);
+            }
 
             if (leaf.x < -50) leaf.x = -50;
             if (leaf.x > width + 50) leaf.x = width + 50;
@@ -129,16 +181,21 @@ public class FallingLeavesView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         width = w;
         height = h;
+
+        boolean isRain = currentSkin.equals("rain");
+
         for (Leaf leaf : leaves) {
             leaf.x = random.nextFloat() * width;
             leaf.y = random.nextFloat() * height;
+            if (isRain) {
+                leaf.rotation = 0;
+            }
         }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         if (leafBitmap == null) return;
 
         for (Leaf leaf : leaves) {
@@ -159,10 +216,26 @@ public class FallingLeavesView extends View {
         isRunning = true;
         invalidate();
     }
+
     public void setLeafAlpha(int alpha) {
+        currentAlpha = alpha;
         if (leafPaint != null) {
             leafPaint.setAlpha(alpha);
             invalidate();
         }
+        Log.d("FallingLeaves", "setLeafAlpha - установлена прозрачность: alpha=" + alpha);
+    }
+
+    public int getLeafAlpha() {
+        return currentAlpha;
+    }
+
+    public void setSkin(String skin) {
+        this.currentSkin = skin;
+        loadSkin();
+
+        leaves.clear();
+        createLeaves(25);
+        invalidate();
     }
 }

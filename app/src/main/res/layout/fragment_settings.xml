@@ -66,44 +66,21 @@
             android:layout_height="wrap_content"
             android:text="20%"
             android:layout_marginBottom="24dp"/>
-
-        <TextView
+        <Button
+            android:id="@+id/btn_change_skin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎨 Сменить вид"
+            android:background="@drawable/outline_button"
+            android:textColor="@color/primary_green"
+            android:layout_marginBottom="16dp"/>
+         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/profile"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginBottom="12dp"/>
-
-        <!-- Аватар-эмодзи -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:id="@+id/text_view_avatar_emoji"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:text="🌳"
-                android:textSize="40sp"
-                android:gravity="center"
-                android:background="@drawable/circle_background"
-                android:padding="8dp"/>
-
-            <Button
-                android:id="@+id/btn_change_avatar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/change_avatar"
-                android:background="@drawable/outline_button"
-                android:textColor="@color/primary_green"
-                android:layout_marginStart="16dp"/>
-
-        </LinearLayout>
 
         <Button
             android:id="@+id/btn_change_name"

@@ -33,16 +33,8 @@ public class SettingsFragment extends Fragment {
     private SeekBar seekBarLeafAlpha;
     private TextView textViewAlphaValue;
     private Button btnChangeName;
-    private Button btnChangeAvatar;
-    private TextView textViewAvatarEmoji;
+    private Button btnChangeSkin;
     private FallingLeavesView fallingLeavesView;
-
-    private String[] emojis = {
-            "🌳", "🌲", "🌴", "🍃", "🍂", "🍁",
-            "🌿", "☘️", "🍀", "🌸", "🌺", "🌻",
-            "🐢", "🦥", "🦦", "🦔", "🐿️", "🕊️",
-            "⭐", "🌟", "✨", "💚", "💪", "🧘"
-    };
 
     @Nullable
     @Override
@@ -59,11 +51,9 @@ public class SettingsFragment extends Fragment {
         seekBarLeafAlpha = view.findViewById(R.id.seekbar_leaf_alpha);
         textViewAlphaValue = view.findViewById(R.id.text_view_alpha_value);
         btnChangeName = view.findViewById(R.id.btn_change_name);
-        btnChangeAvatar = view.findViewById(R.id.btn_change_avatar);
-        textViewAvatarEmoji = view.findViewById(R.id.text_view_avatar_emoji);
+        btnChangeSkin = view.findViewById(R.id.btn_change_skin);
 
         loadSettings();
-        loadAvatarEmoji();
 
         switchLeaves.setOnCheckedChangeListener((buttonView, isChecked) -> {
             settingsPrefs.edit().putBoolean("leaves_enabled", isChecked).apply();
@@ -95,7 +85,7 @@ public class SettingsFragment extends Fragment {
         });
 
         btnChangeName.setOnClickListener(v -> showChangeNameDialog());
-        btnChangeAvatar.setOnClickListener(v -> showEmojiPickerDialog());
+        btnChangeSkin.setOnClickListener(v -> showSkinPickerDialog());
 
         return view;
     }
@@ -107,56 +97,49 @@ public class SettingsFragment extends Fragment {
         switchLeaves.setChecked(leavesEnabled);
         seekBarLeafAlpha.setProgress(alphaProgress);
         textViewAlphaValue.setText(alphaProgress + "%");
-    }
 
-    private void loadAvatarEmoji() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null && user.getDisplayName() != null) {
-            FirebaseFirestore.getInstance()
-                    .collection("users").document(user.getUid())
-                    .get()
-                    .addOnSuccessListener(doc -> {
-                        String emoji = doc.getString("avatarEmoji");
-                        if (emoji != null && !emoji.isEmpty()) {
-                            textViewAvatarEmoji.setText(emoji);
-                        }
-                    });
+        if (fallingLeavesView != null) {
+            int alpha = alphaProgress * 255 / 100;
+            fallingLeavesView.setLeafAlpha(alpha);
+        }
+
+        String savedSkin = settingsPrefs.getString("leaf_skin", "spring");
+        if (fallingLeavesView != null) {
+            fallingLeavesView.setSkin(savedSkin);
         }
     }
 
-    private void showEmojiPickerDialog() {
+    private void showSkinPickerDialog() {
+        String[] skins = {"🌸 Весенний", "🍂 Осенний", "❄️ Зимний", "🌧️ Дождливый"};
+        String[] skinValues = {"spring", "autumn", "snow", "rain"};
+        int currentSkin = getCurrentSkinIndex();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Выберите аватар");
+        builder.setTitle("🎨 Выберите скин");
+        builder.setSingleChoiceItems(skins, currentSkin, (dialog, which) -> {
+            String selectedSkin = skinValues[which];
+            settingsPrefs.edit().putString("leaf_skin", selectedSkin).apply();
 
-        String[] displayItems = new String[emojis.length];
-        for (int i = 0; i < emojis.length; i++) {
-            displayItems[i] = emojis[i];
-        }
+            if (fallingLeavesView != null) {
+                fallingLeavesView.setSkin(selectedSkin);
+            }
 
-        builder.setItems(displayItems, (dialog, which) -> {
-            String selectedEmoji = emojis[which];
-            updateAvatarEmoji(selectedEmoji);
+            dialog.dismiss();
+            Toast.makeText(getContext(), "Скин изменён!", Toast.LENGTH_SHORT).show();
         });
-
         builder.setNegativeButton("Отмена", null);
         builder.show();
     }
 
-    private void updateAvatarEmoji(String emoji) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
-
-        textViewAvatarEmoji.setText(emoji);
-
-        FirebaseFirestore.getInstance()
-                .collection("users").document(user.getUid())
-                .update("avatarEmoji", emoji)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getContext(), "Аватар обновлён!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+    private int getCurrentSkinIndex() {
+        String currentSkin = settingsPrefs.getString("leaf_skin", "spring");
+        switch (currentSkin) {
+            case "spring": return 0;
+            case "autumn": return 1;
+            case "snow": return 2;
+            case "rain": return 3;
+            default: return 0;
+        }
     }
 
     private void showChangeNameDialog() {

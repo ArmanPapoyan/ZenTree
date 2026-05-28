@@ -90,6 +90,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
         treeProgressBar = view.findViewById(R.id.tree_progress_bar);
         textViewTime = view.findViewById(R.id.text_view_time);
         textViewProgress = view.findViewById(R.id.text_view_progress);
+
         treeManager = new TreeManager(requireContext());
         tree = treeManager.loadTree();
 
@@ -114,13 +115,14 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             updateTreeUI();
             showNewDayAnimation();
             continuousScreenMinutes = 0;
-            continuousScreenMinutes = 0;
             saveContinuousMinutes();
             saveNotificationSent(false);
         }
+
         if (!hasUsageStatsPermission()) {
             requestUsageStatsPermission();
         }
+
         growthHandler = new Handler();
 
         if (screenReceiver == null) {
@@ -131,12 +133,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
             requireActivity().registerReceiver(screenReceiver, filter);
             Log.d(TAG, "ScreenStateReceiver registered");
         }
-
-        screenReceiver = new ScreenStateReceiver(this);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_SCREEN_ON);
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        requireActivity().registerReceiver(screenReceiver, filter);
 
         notificationHelper = new NotificationHelper(requireContext());
         screenOnStartTime = System.currentTimeMillis();
@@ -152,6 +148,7 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
 
         updateTreeImage(tree.getCurrentStage());
         updateTreeUI();
+
         return view;
     }
 
@@ -279,7 +276,6 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     public void onScreenOff() {
         lastScreenOffTime = System.currentTimeMillis();
         if (isFocusModeActive) {
-            stopGrowthUpdates();
             screenOffTime = System.currentTimeMillis();
             tree.startGrowth();
             growthStatusText.setText(getString(R.string.status_tree_growing));
@@ -528,5 +524,12 @@ public class HomeFragment extends Fragment implements ScreenStateReceiver.Screen
     public void onPause() {
         super.onPause();
         saveDailyStats();
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (tree.isGrowing()) {
+            startGrowthUpdates();
+        }
     }
 }
